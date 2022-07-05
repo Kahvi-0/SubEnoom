@@ -165,7 +165,7 @@ else
 	echo ""
 fi
 
-rm alivesubdomains2.txt alivesubdomains1.txt 2>&/dev/null
+rm alivesubdomains2.txt alivesubdomains1.txt
 
 # Output
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html

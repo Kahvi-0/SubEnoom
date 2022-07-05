@@ -5,10 +5,15 @@ Sub domain enumerator that can intake domains, IPs, and subnets.
 ##### Syntax
 
 ```
-./SubEnum.sh ./domains.txt outputdirname ( all|passive )
+./SubEnum.sh ./domains.txt outputdirname ( all|passive ) <other arguments>
 ```
+
+Other arguments
+
 ```
 -c  tool cero will only return results with same domain(s) that are submitted to the tool
+
+-p 80,443,8080,etc  ports for active tools to target
 ```
 
 

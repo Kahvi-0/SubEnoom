@@ -96,6 +96,9 @@ cat $domain | waybackurls | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >>
 # Active enum 
 if [[ "$*" == *"all"* ]]; then
 	echo "Active Enum"
+	#Permutation and wordlist generation
+	#https://sidxparab.gitbook.io/subdomain-enumeration-guide/active-enumeration/permutation-alterations
+	
 	#brute force
 	# knock
 

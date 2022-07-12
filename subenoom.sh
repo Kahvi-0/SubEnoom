@@ -1,6 +1,8 @@
 #!/bin/bash
 
 echo "Enum Script For Subdomains"
+echo ""
+echo "Parsing the domains list as the scope"
 
 help_screen () {
 	printf "\n HELP SCREEN \n\n"
@@ -66,7 +68,9 @@ fi
 
 cd $dir
 
-touch subdomains1.txt params1.txt alivesubdomains2.txt alivesubdomains1.txt
+touch subdomains1.txt params1.txt alivesubdomains1.txt
+
+# Write used settings
 
 # Passive enum
 ## subdomain
@@ -111,9 +115,8 @@ if [[ "$*" == *"all"* ]]; then
 fi
 
 
-# RESULT PARSING
 ## Pull domains from certs
-#possibly cut out-of-scope domains (tho could be useful in some cases) 
+
 #if any flag = -c cero will cut out of scope domains.
 if [[ "$*" == *"-c"* ]]; then
 	echo "cero respecting scope"
@@ -124,7 +127,17 @@ else
 	cat subdomains1.txt | sort | uniq | cero -d -c 1000 $ceroports > subdomains2.txt
 fi
 
-sort subdomains1.txt subdomains2.txt | uniq > subdomains.txt && rm subdomains1.txt && rm subdomains2.txt
+sort subdomains1.txt subdomains2.txt | uniq > subdomains3.txt && rm subdomains1.txt && rm subdomains2.txt
+
+# Scope parsing
+if [[ "$*" == *"oos"* ]]; then
+	echo ""
+	mv subdomains3.txt subdomains.txt && rm subdomains3.txt
+else
+	echo "Removing top level domains not defined in domains file"
+	grep -F -f $domain subdomains3.txt > subdomains.txt && rm subdomains3.txt
+fi
+
 
 ## Check if domains are active
 if [[ "$*" == *"all"* ]]; then
@@ -134,6 +147,7 @@ if [[ "$*" == *"all"* ]]; then
 
 else
 	echo "<p><font style="color:red">Passive mode used</font></p>" > alivesubdomains.html
+	cp subdomains.txt alivesubdomains1.txt
 fi
 
 
@@ -145,18 +159,23 @@ fi
 
 #Resolve domain to IP and check if resolved IP is in scope
 
-	#Tools to possibly compare for IPs
-#	filename=$(cat alivesubdomains1.txt | awk -F "/" '{print $3}')
-#	for i in $filename; do
-#		ip=$(dig +short $i)
-#		echo "$i has IP $ip"
-#		if grep -q "$i" $domain; then
-#		    echo "<p><font style="color:green">$i</font> has IP $ip </p>" >> alivesubdomains2.txt ;
-#		else
-#	 	    echo "<p><font style="color:red">$i</font> has IP $ip </p>" >> alivesubdomains2.txt ;
-#	done
-#	fi
 
+filename=$(cat alivesubdomains1.txt)
+#convert subnets to IP lists
+cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' > expandedsubnets.txt
+cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
+nmap -sL -iL ./expandedsubnets.txt -n  | awk '/Nmap scan report/{print $NF}' > inscopeips.txt && rm expandedsubnets.txt
+cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> inscopeips.txt
+for i in $filename; do
+	ip=$(host $i)
+	if echo $ip | grep -F -f inscopeips.txt; then
+	    echo "<p><font style="color:green"> $ip </font> </p>" >> alivesubdomainsX.html ;
+	else
+ 	    echo "$ip" >> alivesubdomainsX.html ;
+	fi
+	done
+
+cat alivesubdomainsX.html | grep -v 'not found: 3(NXDOMAIN)' > alivesubdomains.html
 
 #removing file types that really dont need screenshots
 if [[ "$*" == *"all"* ]]; then
@@ -168,7 +187,7 @@ else
 	echo ""
 fi
 
-rm alivesubdomains2.txt alivesubdomains1.txt
+# rm alivesubdomains1.txt
 
 # Output
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html

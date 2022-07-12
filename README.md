@@ -2,6 +2,8 @@
 
 Sub domain enumerator that can intake domains, IPs, and subnets. 
 
+By default SubEnoom will try to only show domains that are present in the domain list you provide. Try to give at least the highest most domain if possible. 
+
 ##### Syntax
 
 ```

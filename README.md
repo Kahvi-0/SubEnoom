@@ -26,4 +26,6 @@ Other arguments
 example.com
 example2.com
 1.1.1.1
+2.2.2.2-2.2.2.5
+3.3.3.3/24
 ```

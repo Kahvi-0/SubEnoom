@@ -171,7 +171,7 @@ for i in $filename; do
 	if echo $ip | grep -F -f inscopeips.txt; then
 	    echo "<p><font style="color:green"> $ip </font> </p>" >> alivesubdomainsX.html ;
 	else
- 	    echo "$ip" >> alivesubdomainsX.html ;
+ 	    echo "<p> $ip </p>" >> alivesubdomainsX.html ;
 	fi
 	done
 

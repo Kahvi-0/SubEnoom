@@ -7,7 +7,7 @@ By default SubEnoom will try to only show domains that are present in the domain
 ##### Syntax
 
 ```
-./SubEnum.sh ./domains.txt outputdirname ( all|passive ) <other arguments>
+./SubEnum.sh -d ./domains.txt -d outputdirname  -m (all|passive) <other arguments>
 ```
 
 Other arguments

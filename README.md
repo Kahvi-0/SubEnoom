@@ -7,7 +7,7 @@ By default SubEnoom will try to only show domains that are present in the domain
 ##### Syntax
 
 ```
-git clone https://github.com/Kahvi-0/SubEnoom.git
+git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./subenoom.sh
 ```
 
 ```

@@ -5,8 +5,10 @@ go install github.com/tomnomnom/waybackurls@latest
 go install github.com/lc/gau/v2/cmd/gau@latest
 go install github.com/tomnomnom/httprobe@latest
 
-# Config files that can be changed
+# Config files that can be updated with APIkeys
 
-Amass ~/.config/amass/config.ini
+Amass:
+~/.config/amass/config.ini
 
-theHarvester
+theHarvester:
+/etc/theHarvester/api-keys.yaml

@@ -11,7 +11,7 @@ git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./s
 ```
 
 ```
-./subenoom.sh.sh -d ./domains.txt -o outputdirname  -m (all|passive) <other arguments>
+./subenoom.sh -d ./domains.txt -o outputdirname  -m (all|passive) <other arguments>
 ```
 
 Other arguments

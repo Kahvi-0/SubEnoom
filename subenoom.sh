@@ -106,40 +106,52 @@ else
 fi
 
 cd $dir
-
 touch subdomains1.txt params1.txt alivesubdomains1.txt
 
-# Write used settings
-
 # Passive enum
-
 ### Amass
 progalt && echo ""
 echo "Amass"
 amassConfig=~/.config/amass/config.ini
-amass enum -passive -df $domain -log amass.log -config $amassConfig >> subdomains1.txt
+amass enum -passive -df $domain -log amass.log -config $amassConfig >> amass.txt
+cat amass.txt >> subdomains1.txt
 
 ### assetfinder
 progalt && echo ""
 #### Can add API keys detailed here:https://github.com/tomnomnom/assetfinder
 echo "assetfinder"
-cat $domain | assetfinder --subs-only >> subdomains1.txt
+cat $domain | assetfinder --subs-only >> assetfinder.txt
+cat assetfinder.txt >> subdomains1.txt
 
 ### gau
 progalt && echo ""
 #fetches known URLs from AlienVault's Open Threat Exchange, the Wayback Machine, Common Crawl, and URLScan for any given domain
 echo "gau"
-cat $domain | gau --subs | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat $domain | gau --subs | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >> gau.txt
+cat gau.txt >> subdomains1.txt
 
 ### waybackurls
 progalt && echo ""
 #Pulls urls from wayback
 echo "waybackurls"
-cat $domain | waybackurls | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat $domain | waybackurls >> waybackurls.txt
+cat waybackurls.txt | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat waybackurls.txt >> urls1.txt
+
+### theHarvester
+progalt && echo ""
+echo "theHarvester"
+filename=$(cat $domain)
+for i in $filename; do 
+	theHarvester -d $i -b all >> theHarvester.txt
+	cat theHarvester.txt | sed -n '/Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort | uniq >> subdomains1.txt
+	cat theHarvester.txt | sed -n '/Hosts found/,$p' | tail -n +3 | sort | uniq >> hostinfo.txt
+	cat theHarvester.txt | sed -n '/Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> emails1.txt
+	cat theHarvester.txt | sed -n '/Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> urls1.txt
+done
+
 
 # Add new passive methods above me
-
-
 # Active enum
 if [[ "$*" == *"all"* ]]; then
 	echo "Active Enum"
@@ -165,7 +177,6 @@ fi
 
 
 ## Pull domains from certs
-
 #if any flag = -c cero will cut out of scope domains.
 progalt && echo ""
 if [[ "$*" == *"-c"* ]]; then
@@ -204,16 +215,14 @@ else
 	cp subdomains.txt alivesubdomains1.txt
 fi
 
-
-#### Add option to proxy traffic through burp
 ## Screenshot each domain
 
 # Final sorting
-# Ideas to check for IPs and what is inscope
+
+cat urls1.txt | sort | uniq >> urls.txt
+cat emails1.txt | sort | uniq >> emails.txt
 
 #Resolve domain to IP and check if resolved IP is in scope
-
-
 progalt && echo ""
 #convert subnets to IP lists
 cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' > expandedsubnets.txt
@@ -247,7 +256,9 @@ fi
 # rm alivesubdomains1.txt
 
 # Output
-wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
+cp ../results.html .
+clear -x
+echo "Expecting more results?"
 
 if [[ "$mode" == *"all"* ]]; then
 	firefox ./results.html ./aquatone_report.html &

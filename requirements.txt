@@ -12,3 +12,5 @@ Amass:
 
 theHarvester:
 /etc/theHarvester/api-keys.yaml
+
+Assetfinder

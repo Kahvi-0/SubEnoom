@@ -6,6 +6,13 @@ By default SubEnoom will try to only show domains that are present in the domain
 
 Add API keys to the following configs on your host for max results.
 
+Amass:
+~/.config/amass/config.ini
+
+theHarvester:
+/etc/theHarvester/api-keys.yaml
+
+Assetfinder
 
 ##### Syntax
 

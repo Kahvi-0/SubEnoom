@@ -36,7 +36,8 @@ Other arguments
 
 #### To Do
 
-- Aquatone against web servers on IPs and not just domains 
+- Aquatone against web servers on IPs and not just domains
+- List web servers that may just be IP based
 - Seperate inscope and out of scope
 
 

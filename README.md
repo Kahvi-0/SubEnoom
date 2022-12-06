@@ -34,11 +34,6 @@ Other arguments
 -p 80,443,8080,etc  ports for active tools to target
 ```
 
-#### To Do
-
-- Aquatone against web servers on IPs and not just domains
-- List web servers that may just be IP based
-- Seperate inscope and out of scope
 
 
 #### Domain file format:
@@ -50,3 +45,9 @@ example2.com
 2.2.2.2-32
 3.3.3.3/24
 ```
+
+#### To Do
+
+- Aquatone against web servers on IPs and not just domains
+- List web servers that may just be IP based
+- Seperate inscope and out of scope

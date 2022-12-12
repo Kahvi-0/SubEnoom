@@ -51,3 +51,5 @@ example2.com
 - Aquatone against web servers on IPs and not just domains
 - List web servers that may just be IP based
 - Seperate inscope and out of scope
+- List of info about scan such as ports checked
+- better list of live / inscope websites

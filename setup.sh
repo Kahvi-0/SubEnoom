@@ -1,6 +1,6 @@
 #Installs
 
-sudo apt-get install golang-go
+sudo apt-get  -qq  install golang-go
 
 go install github.com/tomnomnom/assetfinder@latest
 go install github.com/tomnomnom/waybackurls@latest

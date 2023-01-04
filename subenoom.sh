@@ -51,7 +51,7 @@ stats() {
 while getopts ":d:o:m:h:" option; do
 	case "${option}" in
 		d) # List of domains and IPs
-			domain=../${OPTARG};;
+			domain=$(pwd)/${OPTARG};;
 		o) # Output dir
 			dir=${OPTARG};;
 		m) # Passive or all tests
@@ -99,12 +99,19 @@ else
 fi
 
 # Setup files / dirs
-if [ ! -d "$dir" ]; then
-	mkdir $dir
-else
-	echo "Directory already exists"
-	exit 1
-fi
+while true; do
+	if [ ! -d "$dir" ]; then
+		mkdir $dir
+	else
+		echo "Directory already exists"
+		echo ""
+		echo "Choose a new output directory name"
+		read dir
+		echo "new output directory will be $dir"
+		continue
+	fi
+	break
+done
 
 cd $dir
 touch subdomains1.txt params1.txt alivesubdomains1.txt

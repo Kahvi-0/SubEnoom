@@ -230,18 +230,21 @@ cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,
 cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
 nmap -sL -iL ./expandedsubnets.txt -n  | awk '/Nmap scan report/{print $NF}' > inscopeips.txt && rm expandedsubnets.txt
 cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> inscopeips.txt
+#Resolve domains to IPs and highlighting ones that are inscope based on provided IPs
 echo "Resolving IPs for found domains"
 filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
-	ip=$(host $i)
-	if echo $ip | grep -F -f inscopeips.txt; then
-	    echo "<p><font style="color:green"> $ip </font> </p>" >> alivesubdomainsX.html ;
+	host=$(host $i)
+	if echo $host | grep -F -f inscopeips.txt; then
+	    echo "<p><font style="color:green"> $host </font> </p>" >> alivesubdomainsX.html ;
+	    echo $host >> inscopeDomains1.txt ;
 	else
- 	    echo "<p> $ip </p>" >> alivesubdomainsX.html ;
+ 	    echo "<p> $host </p>" >> alivesubdomainsX.html ;
 	fi
 	done
 
 cat alivesubdomainsX.html | grep -v 'not found: 3(NXDOMAIN)' > alivesubdomains.html
+cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains.txt
 
 #removing file types that really dont need screenshots
 progalt && echo ""

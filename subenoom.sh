@@ -70,6 +70,7 @@ done
 # Check for mandatory args
 if [ -z "$domain" ] || [ -z "$dir" ] || [ -z "$mode" ]; then
     help_screen
+    exit 1
 fi
 
 

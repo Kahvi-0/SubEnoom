@@ -260,7 +260,7 @@ fi
 # rm alivesubdomains1.txt
 
 # Output
-cp ../results.html .
+wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
 clear -x
 echo "Expecting more results?"
 

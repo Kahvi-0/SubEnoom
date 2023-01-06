@@ -267,13 +267,13 @@ fi
 # rm alivesubdomains1.txt
 
 # Output
-wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
+wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
 clear -x
 echo "Expecting more results?"
 
 if [[ "$mode" == *"all"* ]]; then
-	firefox ./results.html ./aquatone_report.html &
+	firefox ./results.html ./aquatone_report.html > /dev/null &
 
 else
-	firefox ./results.html &
+	firefox ./results.html > /dev/null &
 fi

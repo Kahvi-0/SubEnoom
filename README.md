@@ -1,5 +1,9 @@
 ### SubEnoom
 
+Version 1.0
+
+
+
 Script that combines many OSINT tools. Can intake domains, IPs, and subnets. 
 
 By default SubEnoom will try to only show domains that are present in the domain list you provide. Try to give at least the highest most domain if possible. 

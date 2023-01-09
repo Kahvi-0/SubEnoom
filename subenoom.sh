@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 echo "Enum Script For Subdomains"
 echo ""
 echo "Parsing the domains list as the scope"

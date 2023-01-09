@@ -173,7 +173,7 @@ if [[ "$*" == *"all"* ]]; then
 	filename=$(cat $domain)
 	for i in $filename; do
 		echo "Gobusting subdomains for $i"
-		gobuster dns -k -d $i -w $subwordlist -o gobust.txt
+		gobuster dns -d $i -w $subwordlist -o gobust.txt
 		cat gobust.txt | awk -F ' ' '{print $2}' | sort | uniq >> subdomains1.txt && rm gobust.txt
 	done
 

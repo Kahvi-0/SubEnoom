@@ -6,6 +6,8 @@ echo "Enum Script For Subdomains"
 echo ""
 echo "Parsing the domains list as the scope"
 
+subwordlist='/usr/share/wordlists/amass/jhaddix_all.txt'
+
 help_screen() {
 	printf "\n HELP SCREEN \n\n"
 	printf "./SubEnum.sh -d <domain list file> -o <output dirname> -m <mode>\n"
@@ -173,7 +175,7 @@ if [[ "$*" == *"all"* ]]; then
 	filename=$(cat $domain)
 	for i in $filename; do
 		echo "Gobusting subdomains for $i"
-		gobuster dns -d $i -w $subwordlist -o gobust.txt
+		gobuster dns -q -d $i -w $subwordlist -o gobust.txt
 		cat gobust.txt | awk -F ' ' '{print $2}' | sort | uniq >> subdomains1.txt && rm gobust.txt
 	done
 

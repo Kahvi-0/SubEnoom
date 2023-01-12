@@ -9,10 +9,16 @@ Script that combines many OSINT tools. Can intake domains, IPs, and subnets.
 By default SubEnoom will try to only show domains that are present in the domain list you provide. Try to give at least the highest most domain if possible. 
 
 
-##### Install
+##### Download
 
 ```
 git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./subenoom.sh
+```
+
+##### Install
+
+```
+./setup.sh
 ```
 
 Add API keys to the following configs on your host for max results.

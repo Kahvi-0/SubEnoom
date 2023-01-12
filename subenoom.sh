@@ -1,19 +1,25 @@
 #!/bin/bash
 
-set -e
+# For the moment, this tool will be focues on IPv4
+
+# Error handling 
+#set -e
+#trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+#trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 echo "Enum Script For Subdomains"
 echo ""
 echo "Parsing the domains list as the scope"
 
-subwordlist='/usr/share/wordlists/amass/jhaddix_all.txt'
+subwordlist='/usr/share/wordlists/amass/fierce_hostlist.txt'
+#subwordlist='/usr/share/wordlists/amass/jhaddix_all.txt'
+
 
 help_screen() {
 	printf "\n HELP SCREEN \n\n"
 	printf "./SubEnum.sh -d <domain list file> -o <output dirname> -m <mode>\n"
 	printf "\nmode= passive,all \n"
 	printf "\n-p 80,443,8080,etc  ports for active tools to target\n"
-	printf "\n-c makes sure that cero only returns inscope domains\n"
 }
 
 check_mode() {
@@ -77,8 +83,7 @@ if [ -z "$domain" ] || [ -z "$dir" ] || [ -z "$mode" ]; then
     exit 1
 fi
 
-
-
+# Checking the scan mode
 if [[ "$mode" == *"all"* ]]; then
 	echo "scan will include active methods"
 else
@@ -120,7 +125,30 @@ done
 cd $dir
 touch subdomains1.txt params1.txt alivesubdomains1.txt
 
-# Passive enum
+#convert subnets to IP list and create an expanded list of inscope IPs and domains
+file=$(cat $domain)
+for i in $file; do
+	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' ; then
+		echo ""
+	else
+		host $i | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' >> inscopeips.txt
+		echo $i >> InputHosts.txt
+		echo $i
+	fi
+	done
+
+cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' > expandedsubnets.txt && cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
+nmap -sL -iL ./expandedsubnets.txt -n  | awk '/Nmap scan report/{print $NF}' >> inscopeips.txt && rm expandedsubnets.txt
+cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> inscopeips.txt
+cat inscopeips.txt InputHosts.txt | uniq >> ExpandedScope.txt
+domain=ExpandedScope.txt
+
+
+# Expand input domain file and move over to using expanded list for rest of script
+
+#==========================================
+#=========PASSIVE ENUMERATION TOOLS========
+#==========================================
 ### Amass
 progalt && echo ""
 echo "Amass"
@@ -130,7 +158,6 @@ cat amass.txt >> subdomains1.txt
 
 ### assetfinder
 progalt && echo ""
-#### Can add API keys detailed here:https://github.com/tomnomnom/assetfinder
 echo "assetfinder"
 cat $domain | assetfinder --subs-only >> assetfinder.txt
 cat assetfinder.txt >> subdomains1.txt
@@ -139,15 +166,18 @@ cat assetfinder.txt >> subdomains1.txt
 progalt && echo ""
 #fetches known URLs from AlienVault's Open Threat Exchange, the Wayback Machine, Common Crawl, and URLScan for any given domain
 echo "gau"
-cat $domain | gau --subs | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >> gau.txt
-cat gau.txt >> subdomains1.txt
+cat InputHosts.txt | gau --subs --blacklist ttf,woff,svg,png,gif --fc 404,400,405,500 >> gau.txt
+cat gau.txt | grep -oP '(?<=^https:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat gau.txt | grep -oP '(?<=^http:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat gau.txt >> urls1.txt
 
 ### waybackurls
 progalt && echo ""
 #Pulls urls from wayback
 echo "waybackurls"
-cat $domain | waybackurls >> waybackurls.txt
-cat waybackurls.txt | grep -oP '(?<=:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat InputHosts.txt | waybackurls >> waybackurls.txt
+cat waybackurls.txt | grep -oP '(?<=^https:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
+cat waybackurls.txt | grep -oP '(?<=^http:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
 cat waybackurls.txt >> urls1.txt
 
 ### theHarvester
@@ -162,9 +192,9 @@ for i in $filename; do
 	cat theHarvester.txt | sed -n '/Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> urls1.txt
 done
 
-
-# Add new passive methods above me
-# Active enum
+#=========================================
+#=========ACTIVE ENUMERATION TOOLS========
+#=========================================
 if [[ "$*" == *"all"* ]]; then
 	echo "Active Enum"
 	#Permutation and wordlist generation
@@ -172,7 +202,8 @@ if [[ "$*" == *"all"* ]]; then
 	
 	#brute force
 	progalt && echo ""
-	filename=$(cat $domain)
+	echo "This may take a while..."
+	filename=$(cat InputHosts.txt)
 	for i in $filename; do
 		echo "Gobusting subdomains for $i"
 		gobuster dns -q -d $i -w $subwordlist -o gobust.txt
@@ -182,47 +213,28 @@ if [[ "$*" == *"all"* ]]; then
 	## Check for subdomain hijack
 	#go get github.com/haccer/subjack
 	#~/go/bin/subjack -w $url/recon/final.txt -t 100 -timeout 30 -ssl -c ~/go/src/github.com/haccer/subjack/fingerprints.json -v 3 -o $url/recon/potential_takeover/PT.txt
-
-
-	# Add new active methods above me
+	# ================================================
 fi
 
 
 ## Pull domains from certs
-#if any flag = -c cero will cut out of scope domains.
-progalt && echo ""
-if [[ "$*" == *"-c"* ]]; then
-	echo "cero respecting scope"
-	scope=$(cat $domain | tr '\n' '|')
-	cat subdomains1.txt | sort | uniq | cero -d -c 1000 $ceroports | grep -E "($scope)" > subdomains2.txt
-else
-	echo "cero will include outofscope domains"
-	cat subdomains1.txt | sort | uniq | cero -d -c 1000 $ceroports > subdomains2.txt
-fi
 
-sort subdomains1.txt subdomains2.txt | uniq > subdomains3.txt && rm subdomains1.txt && rm subdomains2.txt
+cat subdomains1.txt | sort | uniq | cero -d -c 1000 $ceroports  | grep -E "($scope)" > subdomains2.txt
+sort subdomains1.txt subdomains2.txt | uniq > subdomains.txt && rm subdomains1.txt && rm subdomains2.txt
 
 # Scope parsing
 progalt && echo ""
-if [[ "$*" == *"oos"* ]]; then
-	echo ""
-	mv subdomains3.txt subdomains.txt && rm subdomains3.txt
-else
-	echo "Removing top level domains not defined in domains file"
-	grep -F -f $domain subdomains3.txt > subdomains.txt && rm subdomains3.txt
-fi
-
 
 ## Check if domains are active
 
 progalt && echo ""
 if [[ "$mode" == *"all"* ]]; then
 	echo "checking which subdomains are alive"
-	cat ./subdomains.txt | httprobe $httprobeports > upcheck1.txt
+	cat ./subdomains.txt inscopeips.txt | httprobe $httprobeports > upcheck1.txt
 	sort upcheck1.txt | grep -Eo "http://.*"  | cut -c 8- > http.txt
 	sort upcheck1.txt | grep -Eo "https://.*"  | cut -c 9- > https.txt
 	cat http.txt https.txt | sort | uniq > alivesubdomains1.txt
-	sort upcheck1.txt | uniq > toscreenshot.txt
+	sort upcheck1.txt  | uniq > toscreenshot.txt
 else
 	cp subdomains.txt alivesubdomains1.txt
 fi
@@ -236,26 +248,45 @@ cat emails1.txt | sort | uniq >> emails.txt
 
 #Resolve domain to IP and check if resolved IP is in scope
 progalt && echo ""
-#convert subnets to IP lists
-cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' > expandedsubnets.txt
-cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
-nmap -sL -iL ./expandedsubnets.txt -n  | awk '/Nmap scan report/{print $NF}' > inscopeips.txt && rm expandedsubnets.txt
-cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> inscopeips.txt
+
 #Resolve domains to IPs and highlighting ones that are inscope based on provided IPs
 echo "Resolving IPs for found domains"
+
 filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
-	host=$(host $i)
-	if echo $host | grep -F -f inscopeips.txt; then
-	    echo "<p><font style="color:green"> $host </font> </p>" >> alivesubdomainsX.html ;
-	    echo $host >> inscopeDomains1.txt ;
-	else
- 	    echo "<p> $host </p>" >> alivesubdomainsX.html ;
-	fi
+	host $i >> resolve1.txt ||true
+	cat resolve1.txt | uniq > resolve2.txt 
+	cat resolve2.txt | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+	progalt && echo ""
+	echo "Resolving hostnames"
 	done
 
-cat alivesubdomainsX.html | grep -v 'not found: 3(NXDOMAIN)' > alivesubdomains.html
-cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains.txt
+while read i;  do
+	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' ; then
+		ip=$(echo $i | grep address | awk -F ' ' '{print$NF}')
+		newline=$(echo "$i " $(whois $ip | grep Organization))
+		sed -i "s/.*$i.*/$newline/"  resolve.txt
+	else
+		progalt && echo ""
+		echo "Determining owners of IPs. This may take a while..."
+	fi
+done <resolve.txt
+
+#filename=$(cat resolve.txt)
+#for i in $filename; do
+while read i;  do
+	if echo $i | grep -F -f inscopeips.txt; then
+	    echo "<p><font style="color:purple"> $i </font> </p>" >> alivesubdomains.html ;
+	    echo $i >> inscopeDomains1.txt ;
+	else
+ 	    echo "<p> $i </p>" >> alivesubdomains.html ;
+	fi
+done <resolve.txt
+
+cat resolve.txt | uniq > ResolveFinal.txt
+
+cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains2.txt
+cat inscopeDomains2.txt | sort | uniq > inscopeDomains.txt
 
 #removing file types that really dont need screenshots
 progalt && echo ""
@@ -268,12 +299,10 @@ else
 	echo ""
 fi
 
-# rm alivesubdomains1.txt
+rm alivesubdomains1.txt InputHosts.txt resolve1.txt resolve2.txt urls1.txt
 
 # Output
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
-clear -x
-echo "Expecting more results?"
 
 if [[ "$mode" == *"all"* ]]; then
 	firefox ./results.html ./aquatone_report.html > /dev/null &
@@ -281,3 +310,11 @@ if [[ "$mode" == *"all"* ]]; then
 else
 	firefox ./results.html > /dev/null &
 fi
+
+progalt && echo ""
+echo "Expecting more results?"
+echo " "
+echo "Add API keys to the following tools"
+echo "- Assetfinder: https://github.com/tomnomnom/assetfinder"
+echo "- theHarvester"
+echo "- Amass"

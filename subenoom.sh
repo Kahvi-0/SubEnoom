@@ -143,7 +143,11 @@ cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> insc
 cat inscopeips.txt InputHosts.txt | uniq >> ExpandedScope.txt
 domain=ExpandedScope.txt
 
-
+file=$(cat inscopeips.txt)
+for i in $file; do
+	curl -i -s -k -X $'GET' -H $'Host: ipinfo.io' -H $'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0' $"https://ipinfo.io/$i?dataset=reverse-api" | grep -oP '(?<=noopener">).*(?=<\/a>)' >> ReverseIP.txt
+	done
+	
 # Expand input domain file and move over to using expanded list for rest of script
 
 #==========================================

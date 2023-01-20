@@ -137,8 +137,9 @@ for i in $file; do
 	fi
 	done
 
-cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' > expandedsubnets.txt && cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
-nmap -sL -iL ./expandedsubnets.txt -n  | awk '/Nmap scan report/{print $NF}' >> inscopeips.txt && rm expandedsubnets.txt
+cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' >> expandedsubnets.txt
+cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
+nmap -sL -iL ./expandedsubnets.txt -n  | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' | sort | uniq >> inscopeips.txt && rm expandedsubnets.txt
 cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> inscopeips.txt
 cat inscopeips.txt InputHosts.txt | uniq >> ExpandedScope.txt
 domain=ExpandedScope.txt
@@ -224,7 +225,7 @@ fi
 
 ## Pull domains from certs
 
-cat subdomains1.txt | sort | uniq | cero -d -c 1000 $ceroports  | grep -E "($scope)" > subdomains2.txt
+cat subdomains1.txt inscopeips.txt | sort | uniq | cero -d -c 1000 $ceroports  | grep -E "($scope)" > subdomains2.txt
 sort subdomains1.txt subdomains2.txt | uniq > subdomains.txt && rm subdomains1.txt && rm subdomains2.txt
 
 # Scope parsing

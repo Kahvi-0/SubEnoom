@@ -172,7 +172,7 @@ cat assetfinder.txt >> subdomains1.txt
 progalt && echo ""
 #fetches known URLs from AlienVault's Open Threat Exchange, the Wayback Machine, Common Crawl, and URLScan for any given domain
 echo "gau"
-cat InputHosts.txt | gau --subs --blacklist ttf,woff,svg,png,gif --fc 404,400,405,500 >> gau.txt
+cat InputHosts.txt | gau --subs --blacklist png,jpg,jpeg,gif,css,svg,woff,woff2,map,pdf,js,webp,ttf,eot,webp,jfif --fc 404,400,405,500 >> gau.txt
 cat gau.txt | grep -oP '(?<=^https:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
 cat gau.txt | grep -oP '(?<=^http:\/\/).*?(?=\/|\?|$)' | sort | uniq >> subdomains1.txt
 cat gau.txt >> urls1.txt

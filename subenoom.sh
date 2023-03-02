@@ -133,13 +133,12 @@ for i in $file; do
 	else
 		host $i | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' >> inscopeips.txt
 		echo $i >> InputHosts.txt
-		echo $i
 	fi
 	done
 
 cat $domain | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2}$' >> expandedsubnets.txt
 cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\-' >> expandedsubnets.txt
-nmap -sL -iL ./expandedsubnets.txt -n  | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' | sort | uniq >> inscopeips.txt && rm expandedsubnets.txt
+nmap -sL -iL ./expandedsubnets.txt -n 2>/dev/null | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' | sort | uniq >> inscopeips.txt && rm expandedsubnets.txt
 cat $domain | grep -E '^[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' >> inscopeips.txt
 cat inscopeips.txt InputHosts.txt | uniq >> ExpandedScope.txt
 domain=ExpandedScope.txt
@@ -191,11 +190,12 @@ progalt && echo ""
 echo "theHarvester"
 filename=$(cat $domain)
 for i in $filename; do 
-	theHarvester -d $i -b all >> theHarvester.txt
-	cat theHarvester.txt | sed -n '/Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort | uniq >> subdomains1.txt
-	cat theHarvester.txt | sed -n '/Hosts found/,$p' | tail -n +3 | sort | uniq >> hostinfo.txt
-	cat theHarvester.txt | sed -n '/Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> emails1.txt
-	cat theHarvester.txt | sed -n '/Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> urls1.txt
+	theHarvester -d $i -b all > theHarvester.txt
+	cat theHarvester.txt >> theHarvester.log
+	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort | uniq >> subdomains1.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | tail -n +3 | sort | uniq >> hostinfo.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> emails1.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> urls1.txt
 done
 
 #=========================================
@@ -213,7 +213,7 @@ if [[ "$*" == *"all"* ]]; then
 	for i in $filename; do
 		echo "Gobusting subdomains for $i"
 		gobuster dns -q -d $i -w $subwordlist -o gobust.txt
-		cat gobust.txt | awk -F ' ' '{print $2}' | sort | uniq >> subdomains1.txt && rm gobust.txt
+		cat gobust.txt | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | awk -F ' ' '{print $2}' | sort | uniq >> subdomains1.txt && rm gobust.txt
 	done
 
 	## Check for subdomain hijack
@@ -282,12 +282,14 @@ done <resolve.txt
 #for i in $filename; do
 while read i;  do
 	if echo $i | grep -F -f inscopeips.txt; then
-	    echo "<p><font style="color:purple"> $i </font> </p>" >> alivesubdomains.html ;
+	    sed -i "1s/^/<p><font style='color:purple'> $i <\/font> <\/p>\n /" alivesubdomains1.html ;
 	    echo $i >> inscopeDomains1.txt ;
 	else
- 	    echo "<p> $i </p>" >> alivesubdomains.html ;
+ 	    echo "<p> $i </p>" >> alivesubdomains1.html ;
 	fi
 done <resolve.txt
+
+cat alivesubdomains1.html | uniq > alivesubdomains.html
 
 cat resolve.txt | uniq > ResolveFinal.txt
 

@@ -37,13 +37,13 @@ Assetfinder
 ##### Syntax
 
 ```
-./subenoom.sh -d domains.txt -o outputdirname  -m (all|passive) <other arguments>
+./subenoom.sh -d domains.txt -o outputdirname
 ```
 
 Example
 
 ```
-./subenoom.sh -d domains.txt -o DNSEnum  -m all 
+./subenoom.sh -d domains.txt -o DNSEnum 
 ```
 
 Other arguments

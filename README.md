@@ -46,15 +46,6 @@ Example
 ./subenoom.sh -d domains.txt -o DNSEnum 
 ```
 
-Other arguments
-
-```
--c  tool cero will only return results with same domain(s) that are submitted to the tool
-
--p 80,443,8080,etc  ports for active tools to target
-```
-
-
 
 #### Domain file format:
 
@@ -68,7 +59,6 @@ example2.com
 
 #### To Do
 
-- Aquatone against web servers on IPs and not just domains
 - List web servers that may just be IP based
 - Seperate inscope and out of scope
 - List of info about scan such as ports checked

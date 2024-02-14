@@ -300,7 +300,7 @@ while read i;  do
 	loadscreen
 	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' ; then
 		ip=$(echo $i | grep address | awk -F ' ' '{print$NF}')
-		newline=$(echo "$i " $(whois $ip | grep Organization))
+		newline=$(echo "$i :" $(whois $ip | sed -n 's/Organization://p' | sed  -e 's/://g'))
 		sed -i "s/.*$i.*/$newline/"  resolve.txt
 	else
 		echo "Determining owners of IPs. This may take a while..."
@@ -320,7 +320,7 @@ done <resolve.txt
 
 # maybe sort by purple for all inscope at top
 cat alivesubdomains1.html | uniq > alivesubdomains.html
-cat resolve.txt | grep "has address"| sed 's/has address//g' | sort -u >> ResolveFinal.txt
+cat resolve.txt | grep "has address"| sed 's/has address/:/g' | sort -u >> ResolveFinal.txt
 cat resolve.txt | grep "is an alias for"|  sort -u > Alias.txt
 cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains2.txt && cat inscopeDomains2.txt | sort | uniq > inscopeDomains.txt
 

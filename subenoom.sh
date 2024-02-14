@@ -342,7 +342,7 @@ cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains2.txt && cat in
 #==========================================
 currentTool=Filecleanup
 loadscreen
-#rm toscreenshot.txt alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt http.txt https.txt scan-urls.txt scan-emails.txt
+rm toscreenshot.txt alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt http.txt https.txt scan-urls.txt scan-emails.txt
 
 #==========================================
 #========= Output =========================
@@ -352,6 +352,8 @@ wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
 #firefox ./results.html ./aquatone_report.html > /dev/null &
 firefox ./results.html > /dev/null &
 
+echo "All files can be found in the output directory $dir"
+echo " "
 echo "Expecting more results?"
 echo " "
 echo "Add API keys to the following tools"

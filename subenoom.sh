@@ -267,25 +267,34 @@ httprobeports=""
 i="found domains and inscope IPs"
 loadscreen 
 echo "Checking which subdomains are alive"
-cat subdomains.txt inscopeips.txt | httprobe $httprobeports > upcheck1.txt
-sort upcheck1.txt | grep -Eo "http://.*"  | cut -c 8- > http.txt
-sort upcheck1.txt | grep -Eo "https://.*"  | cut -c 9- > https.txt
-cat http.txt https.txt | sort | uniq > alivesubdomains1.txt
-sort upcheck1.txt -u > toscreenshot.txt
+#cat subdomains.txt inscopeips.txt | httprobe $httprobeports > upcheck1.txt
+#sort upcheck1.txt | grep -Eo "http://.*"  | cut -c 8- > http.txt
+#sort upcheck1.txt | grep -Eo "https://.*"  | cut -c 9- > https.txt
+#cat http.txt https.txt | sort | uniq > alivesubdomains1.txt
+cat subdomains.txt inscopeips.txt | sort | uniq > alivesubdomains1.txt
+#sort upcheck1.txt -u > toscreenshot.txt
 
 
 #=========================================================
-#========= DETERMINE ALIVE HOSTS AND IF IN SCOPE =========
+#========= RESOLVING IPs AND IF IN SCOPE =========
 #=========================================================
 
-currentTool=ScopeCheck
+currentTool=HOST
 filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
 	loadscreen
-	host $i >> resolve1.txt ||true
-	cat resolve1.txt | sort -u > resolve2.txt 
-	cat resolve2.txt | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+	
+	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com' ; then
+		:
+	else
+		host $i >> resolve1.txt ||true
+	fi
 done
+
+cat resolve1.txt | sort -u > resolve2.txt 
+cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+
+currentTool=whois
 
 while read i;  do
 	loadscreen
@@ -297,6 +306,7 @@ while read i;  do
 		echo "Determining owners of IPs. This may take a while..."
 	fi
 done <resolve.txt
+
 
 while read i;  do
 	loadscreen
@@ -310,20 +320,21 @@ done <resolve.txt
 
 # maybe sort by purple for all inscope at top
 cat alivesubdomains1.html | uniq > alivesubdomains.html
-cat resolve.txt | uniq > ResolveFinal.txt
+cat resolve.txt | grep "has address"| sed 's/has address//g' | sort -u >> ResolveFinal.txt
+cat resolve.txt | grep "is an alias for"|  sort -u > Alias.txt
 cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains2.txt && cat inscopeDomains2.txt | sort | uniq > inscopeDomains.txt
 
 
 #==========================================
 #========= SCREENSHOTTING DOMAINS =========
 #==========================================
-currentTool=Aquatone
-i="alive found domains and inscope IPs"
-loadscreen
+#currentTool=Aquatone
+#i="alive found domains and inscope IPs"
+#loadscreen
 #removing file types that really dont need screenshots
-wget -q https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip -O aquatone.zip && mkdir tools && unzip -qq aquatone.zip -d tools/
-sort toscreenshot.txt -u | grep -v '.css\|.woff\|.js\|.zip\|.svg\|.ico\|.gif\|.png\|.jpg\|.woff2\|.map' > screenshots.txt 
-cat screenshots.txt | tools/aquatone $aquatoneports -silent -out ./
+#get -q https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip -O aquatone.zip && mkdir tools && unzip -qq aquatone.zip -d tools/
+#sort toscreenshot.txt -u | grep -v '.css\|.woff\|.js\|.zip\|.svg\|.ico\|.gif\|.png\|.jpg\|.woff2\|.map' > screenshots.txt 
+#cat screenshots.txt | tools/aquatone $aquatoneports -silent -out ./
 
 
 #==========================================
@@ -331,15 +342,15 @@ cat screenshots.txt | tools/aquatone $aquatoneports -silent -out ./
 #==========================================
 currentTool=Filecleanup
 loadscreen
-rm toscreenshot.txt alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt http.txt https.txt scan-urls.txt scan-emails.txt
+#rm toscreenshot.txt alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt http.txt https.txt scan-urls.txt scan-emails.txt
 
 #==========================================
 #========= Output =========================
 #==========================================
 
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
-firefox ./results.html ./aquatone_report.html > /dev/null &
-
+#firefox ./results.html ./aquatone_report.html > /dev/null &
+firefox ./results.html > /dev/null &
 
 echo "Expecting more results?"
 echo " "
@@ -347,5 +358,4 @@ echo "Add API keys to the following tools"
 echo "- Assetfinder: https://github.com/tomnomnom/assetfinder"
 echo "- theHarvester"
 echo "- Amass"
-
 

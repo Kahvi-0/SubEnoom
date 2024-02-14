@@ -284,7 +284,7 @@ filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
 	loadscreen
 	
-	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com' ; then
+	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net' ; then
 		:
 	else
 		host $i >> resolve1.txt ||true
@@ -292,7 +292,7 @@ for i in $filename; do
 done
 
 cat resolve1.txt | sort -u > resolve2.txt 
-cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
 
 currentTool=whois
 

@@ -371,6 +371,14 @@ rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt sca
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
 firefox ./results.html > /dev/null &
 
+echo " "
+figlet output
+echo "Full list of alive inscope domains found with resolved IPs $dir/inscopeDomains.txt"
+echo " "
+echo "Full list of domains found with resolved IPs $dir/ResolveFinal.txt"
+echo " "
+echo "Full list of domains found $dir/subdomains.txt. This can be reran with the tool to possibly find more domains"
+echo " "
 echo "All files can be found in the output directory $dir"
 echo " "
 echo "Expecting more results?"

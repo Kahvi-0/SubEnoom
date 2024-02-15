@@ -157,7 +157,7 @@ domain=ExpandedScope.txt
 currentTool=ReverseLookup
 file=$(cat inscopeips.txt)
 for i in $file; do
-	curl -i -s -k -X $'GET' -H $'Host: ipinfo.io' -H $'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0' "https://ipinfo.io/$i?dataset=reverse-api" | grep -oP '(?<=noopener">).*(?=<\/a>)' >> ReverseIP.txt
+	echo $i | dnsx -ptr -resp-only --silent >> ReverseIP.txt
 	done
 
 # AMASS
@@ -231,13 +231,14 @@ done
 
 # Brute Force with gobuster
 currentTool=gobuster
-subwordlist='/usr/share/wordlists/amass/fierce_hostlist.txt'
+wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/sublist.txt
+#subwordlist='sublist.txt'
 #subwordlist='/usr/share/wordlists/amass/jhaddix_all.txt'
 filename=$(cat InputHosts.txt)
 for i in $filename; do
 	loadscreen
 	echo "Gobusting subdomains for $i"
-	gobuster dns -q -d $i -w $subwordlist -o gobust.txt
+	gobuster dns -q -d $i -w sublist.txt -o gobust.txt
 	cat gobust.txt | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | awk -F ' ' '{print $2}' | sort | uniq >> scan-subdomains.txt && rm gobust.txt
 done
 
@@ -267,12 +268,7 @@ httprobeports=""
 i="found domains and inscope IPs"
 loadscreen 
 echo "Checking which subdomains are alive"
-#cat subdomains.txt inscopeips.txt | httprobe $httprobeports > upcheck1.txt
-#sort upcheck1.txt | grep -Eo "http://.*"  | cut -c 8- > http.txt
-#sort upcheck1.txt | grep -Eo "https://.*"  | cut -c 9- > https.txt
-#cat http.txt https.txt | sort | uniq > alivesubdomains1.txt
 cat subdomains.txt inscopeips.txt | sort | uniq > alivesubdomains1.txt
-#sort upcheck1.txt -u > toscreenshot.txt
 
 
 #=========================================================
@@ -284,7 +280,7 @@ filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
 	loadscreen
 	
-	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net' ; then
+	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' ; then
 		:
 	else
 		host $i >> resolve1.txt ||true
@@ -292,7 +288,7 @@ for i in $filename; do
 done
 
 cat resolve1.txt | sort -u > resolve2.txt 
-cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
 
 currentTool=whois
 
@@ -300,10 +296,9 @@ while read i;  do
 	loadscreen
 	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' ; then
 		ip=$(echo $i | grep address | awk -F ' ' '{print$NF}')
-		newline=$(echo "$i :" $(whois $ip | sed -n 's/Organization://p' | sed  -e 's/://g'))
-		sed -i "s/.*$i.*/$newline/"  resolve.txt
+		echo "$i :" $(whois $ip | sed -n 's/Organization://p' | sed  -e 's/://g') >> resolve3.txt
 	else
-		echo "Determining owners of IPs. This may take a while..."
+		:
 	fi
 done <resolve.txt
 
@@ -320,36 +315,22 @@ done <resolve.txt
 
 # maybe sort by purple for all inscope at top
 cat alivesubdomains1.html | uniq > alivesubdomains.html
-cat resolve.txt | grep "has address"| sed 's/has address/:/g' | sort -u >> ResolveFinal.txt
+cat resolve3.txt | grep "has address"| sed 's/has address/:/g' | sort -u >> ResolveFinal.txt
 cat resolve.txt | grep "is an alias for"|  sort -u > Alias.txt
 cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains2.txt && cat inscopeDomains2.txt | sort | uniq > inscopeDomains.txt
-
-
-#==========================================
-#========= SCREENSHOTTING DOMAINS =========
-#==========================================
-#currentTool=Aquatone
-#i="alive found domains and inscope IPs"
-#loadscreen
-#removing file types that really dont need screenshots
-#get -q https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip -O aquatone.zip && mkdir tools && unzip -qq aquatone.zip -d tools/
-#sort toscreenshot.txt -u | grep -v '.css\|.woff\|.js\|.zip\|.svg\|.ico\|.gif\|.png\|.jpg\|.woff2\|.map' > screenshots.txt 
-#cat screenshots.txt | tools/aquatone $aquatoneports -silent -out ./
-
 
 #==========================================
 #========= FILE CLEANUP ===================
 #==========================================
 currentTool=Filecleanup
 loadscreen
-rm toscreenshot.txt alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt http.txt https.txt scan-urls.txt scan-emails.txt
+rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt scan-urls.txt scan-emails.txt
 
 #==========================================
 #========= Output =========================
 #==========================================
 
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
-#firefox ./results.html ./aquatone_report.html > /dev/null &
 firefox ./results.html > /dev/null &
 
 echo "All files can be found in the output directory $dir"
@@ -360,4 +341,3 @@ echo "Add API keys to the following tools"
 echo "- Assetfinder: https://github.com/tomnomnom/assetfinder"
 echo "- theHarvester"
 echo "- Amass"
-

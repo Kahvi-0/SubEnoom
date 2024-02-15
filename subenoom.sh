@@ -232,8 +232,6 @@ done
 # Brute Force with gobuster
 currentTool=gobuster
 wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/sublist.txt
-#subwordlist='sublist.txt'
-#subwordlist='/usr/share/wordlists/amass/jhaddix_all.txt'
 filename=$(cat InputHosts.txt)
 for i in $filename; do
 	loadscreen
@@ -242,20 +240,13 @@ for i in $filename; do
 	cat gobust.txt | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | awk -F ' ' '{print $2}' | sort | uniq >> scan-subdomains.txt && rm gobust.txt
 done
 
-# cero
-currentTool=cero
-ceroports=""
-i="found domains and inscope IPs"
-loadscreen
-cat scan-subdomains.txt inscopeips.txt | sort -u | cero -d -c 1000 $ceroports > scan-subdomains2.txt
-
 
 #==========================================
 #========= FINAL SORTING ==================
 #==========================================
 currentTool=Sorting
 loadscreen
-sort -u scan-subdomains.txt scan-subdomains2.txt | grep -v "No names were discovered" > subdomains.txt && rm subdomains1.txt && rm scan-subdomains2.txt
+sort -u scan-subdomains.txt| grep -v "No names were discovered" > subdomains.txt && rm subdomains1.txt && rm scan-subdomains2.txt
 cat scan-urls.txt | sort -u >> urls.txt
 cat scan-emails.txt | sort -u >> emails.txt
 
@@ -279,7 +270,6 @@ currentTool=HOST
 filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
 	loadscreen
-	
 	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' ; then
 		:
 	else
@@ -289,9 +279,7 @@ done
 
 cat resolve1.txt | sort -u > resolve2.txt 
 cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
-
 currentTool=whois
-
 while read i;  do
 	loadscreen
 	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' ; then
@@ -301,7 +289,6 @@ while read i;  do
 		:
 	fi
 done <resolve.txt
-
 
 while read i;  do
 	loadscreen
@@ -314,10 +301,61 @@ while read i;  do
 done <resolve.txt
 
 # maybe sort by purple for all inscope at top
+
+cat inscopeDomains1.txt | awk -F ' ' '{print$1}' | sort -u > cero.txt
+
+
+
+#cero here so it can use a list of domains found to be inscope based on provided IP
+# cero
+currentTool=cero
+ceroports=""
+i="found domains and inscope IPs"
+loadscreen
+cat cero.txt inscopeips.txt | sort -u | cero -d -c 1000 $ceroports > cero-out1.txt
+cat cero-out1.txt | sort -u > cero-out.txt
+#------
+# going over inscope check again after cero
+
+currentTool=HOST-cero
+filename=$(cat cero-out.txt)
+for i in $filename; do
+	loadscreen
+	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' ; then
+		:
+	else
+		host $i >> cero1.txt ||true
+	fi
+done
+cat cero1.txt | sort -u > cero2.txt 
+cat cero2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com' | grep -v mail | grep -v '3(NXDOMAIN)' >> ceroresolve.txt ||true
+currentTool=whois-cero
+while read i;  do
+	loadscreen
+	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}$' ; then
+		ip=$(echo $i | grep address | awk -F ' ' '{print$NF}')
+		echo "$i :" $(whois $ip | sed -n 's/Organization://p' | sed  -e 's/://g') >> resolve3.txt
+	else
+		:
+	fi
+done <ceroresolve.txt
+
+while read i;  do
+	loadscreen
+	if echo $i | grep -F -f inscopeips.txt; then
+	    sed -i "1s/^/<p><font style='color:purple'> $i <\/font> <\/p>\n /" alivesubdomains1.html ;
+	    echo $i >> inscopeDomains1.txt ;
+	else
+ 	    echo "<p> $i </p>" >> alivesubdomains1.html ;
+	fi
+done <ceroresolve.txt
+
+
+#------
 cat alivesubdomains1.html | uniq > alivesubdomains.html
 cat resolve3.txt | grep "has address"| sed 's/has address/:/g' | sort -u >> ResolveFinal.txt
 cat resolve.txt | grep "is an alias for"|  sort -u > Alias.txt
-cat inscopeDomains1.txt | awk -F ' ' '{print$1}' > inscopeDomains2.txt && cat inscopeDomains2.txt | sort | uniq > inscopeDomains.txt
+cat inscopeDomains1.txt | grep "has address"| sed 's/has address/:/g' | sort -u > inscopeDomains.txt
 
 #==========================================
 #========= FILE CLEANUP ===================

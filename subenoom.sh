@@ -222,12 +222,20 @@ for i in $filename; do
 	loadscreen
 	theHarvester -d $i -b all > theHarvester.txt
 	cat theHarvester.txt >> theHarvester.log
-	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort | uniq >> scan-subdomains.txt
-	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | tail -n +3 | sort | uniq >> hostinfo.txt
-	cat theHarvester.txt | sed -n '/\[\*\] Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> scan-emails.txt
-	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort | uniq >> scan-urls.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort -u >> scan-subdomains.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | tail -n +3 | sort -u >> hostinfo.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> scan-emails.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> scan-urls.txt
 done
 
+#Subfinder
+currentTool=Subfinder
+subfinder -up
+filename=$(cat InputHosts.txt)
+for i in $filename; do 
+	loadscreen
+	subfinder -d $i -silent | sort -u >> scan-subdomains.txt
+done
 
 # Brute Force with gobuster
 currentTool=gobuster

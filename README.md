@@ -31,7 +31,12 @@ theHarvester:
 ```
 /etc/theHarvester/api-keys.yaml
 ```
-Assetfinder
+
+Subfinder:
+```
+~/.config/subfinder/provider-config.yaml
+```
+
 
 
 ##### Syntax

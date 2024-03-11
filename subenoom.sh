@@ -234,7 +234,7 @@ subfinder -up
 filename=$(cat InputHosts.txt)
 for i in $filename; do 
 	loadscreen
-	subfinder -d $i -silent | sort -u >> scan-subdomains.txt
+	subfinder -d $i -silent -all | sort -u >> scan-subdomains.txt
 done
 
 # Brute Force with gobuster

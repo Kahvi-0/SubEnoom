@@ -201,8 +201,8 @@ for i in $file; do
 	echo $i | gau --subs --blacklist png,jpg,jpeg,gif,css,svg,woff,woff2,map,pdf,js,webp,ttf,eot,webp,jfif --fc 404,400,405,500 >> scan-urls.txt	
 done
 	
-cat gau.txt | grep -oP '(?<=^https:\/\/).*?(?=\/|\?|$)' | sort -u >> scan-subdomains.txt
-cat gau.txt | grep -oP '(?<=^http:\/\/).*?(?=\/|\?|$)' | sort -u >> scan-subdomains.txt
+cat scan-urls.txt | grep -oP '(?<=^https:\/\/).*?(?=\/|\?|$)' | sort -u >> scan-subdomains.txt
+cat scan-urls.txt | grep -oP '(?<=^http:\/\/).*?(?=\/|\?|$)' | sort -u >> scan-subdomains.txt
 
 # Waybackurls
 currentTool=Waybackurls
@@ -254,7 +254,7 @@ done
 #==========================================
 currentTool=Sorting
 loadscreen
-sort -u scan-subdomains.txt| grep -v "No names were discovered" > subdomains.txt && rm subdomains1.txt && rm scan-subdomains2.txt
+sort -u scan-subdomains.txt| grep -v "No names were discovered" > subdomains.txt
 cat scan-urls.txt | sort -u >> urls.txt
 cat scan-emails.txt | sort -u >> emails.txt
 

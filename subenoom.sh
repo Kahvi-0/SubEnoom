@@ -15,6 +15,7 @@ ENDCOLOUR="\e[0m"
 
 #Configs:
 amassConfig=~/.config/amass/config.ini
+subfinderconfig=
 
 help_screen() {
 	figlet HELP SCREEN
@@ -298,7 +299,7 @@ subfinder -up
 filename=$(cat InputHosts.txt)
 for i in $filename; do 
 	loadscreen
-	subfinder -d $i -silent -all | sort -u >> scan-subdomains.txt
+	subfinder -d $i -silent -all $subfinderconfig | sort -u >> scan-subdomains.txt
 done
 
 # Brute Force with gobuster

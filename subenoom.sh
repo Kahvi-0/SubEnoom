@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#==========================================
+#========= Script Setup ===================
+#==========================================
+
 WHITE="\e[97m"
 BLUE="\e[34m"
 PURPLE="\e[35m"
@@ -15,6 +19,14 @@ amassConfig=~/.config/amass/config.ini
 help_screen() {
 	figlet HELP SCREEN
 	printf "./SubEnum.sh -d <domain list file> -o <output dirname>\n"
+	printf "\n"
+	printf "Options\n"
+	printf "\n"
+	echo '-f to add a filter to remove results that are tied to'
+	printf "amazonaws.com|office.com|microsoft.com|cloudflare.com|akadns.net|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com\n"
+	printf "\n"
+	echo '-r to not resolve and add IP to scope'
+	printf "\n"
 }
 
 loadscreen() {
@@ -66,12 +78,17 @@ stats() {
 	echo " "
 }
 
-while getopts ":d:o:h:" option; do
+
+while getopts ":d:o:h:rf" option; do
 	case "${option}" in
 		d) # List of domains and IPs
 			domain=$(pwd)/${OPTARG};;
 		o) # Output dir
 			dir=${OPTARG};;
+		r) # Do not resolve IPs for provided domains
+			Resolve=1;;
+		f) # Add filter for web hosting
+			filter=1;;
 		h) # Display Help
 			help_screen
 			exit 1;;
@@ -89,7 +106,9 @@ fi
 
 # Add section for target ports if wanted
 
-# Setup files / dirs
+#=======================================================
+#========= Setup directoy for output ===================
+#=======================================================
 while true; do
 	if [ ! -d "$dir" ]; then
 		mkdir $dir
@@ -105,29 +124,74 @@ while true; do
 done
 cd $dir
 
-#finish section for making and moving to dir
 
-#convert subnets to IP list and create an expanded list of inscope IPs and domains
+#=======================================================
+#========= Setup for script options ====================
+#=======================================================
 
-file=$(cat $domain)
-for i in $file; do
-	#check if line is an IP address
-	if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' ; then
-		echo ""
-	else
-		host $i | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' >> inscopeips.txt
-		echo $i >> InputHosts.txt
-	fi
-	done
+# for -f
 
+
+
+# for -r
+#if -r is not provided, resolve Ips for domains and add those IPs to the list of inscope IPs
+resolveProvidedDomains() {
+	file=$(cat $domain)
+	for i in $file; do
+		#check if line is an IP address
+		if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' ; then
+			echo ""
+		else
+			host $i | grep -oE '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' >> inscopeips.txt
+			echo $i >> InputHosts.txt
+		fi
+		done
+}
+
+
+# if -r is provided just add domains to InputHosts.txt
+DoNotresolveProvidedDomains() {
+	file=$(cat $domain)
+	for i in $file; do
+		#check if line is an IP address
+		if echo $i | grep -q -E '[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}' ; then
+			echo ""
+		else
+			echo $i >> InputHosts.txt
+		fi
+		done
+}
+
+#=============================================
+#========= Script Opening ====================
+#=============================================
 
 figlet Sub e Noom
-echo -e "${WHITE}[+]${BLUE} SubeNoom v2.0 ${WHITE}[+]${ENDCOLOR}"
+echo -e "${WHITE}[+]${BLUE} SubeNoom v3.1 ${WHITE}[+]${ENDCOLOR}"
 echo " "
-echo -e "${WHITE}[+]${PURPLE}The following are the domains and IP addresses that will be ran through OSINT tools ${WHITE}[+]${ENDCOLOR}"
-echo -e "${WHITE}[+]${RED}The resolved IP address(es) for provided domains were included${WHITE}[+]${ENDCOLOR}"
 
-cat inscopeips.txt
+# -f arg
+if [[ $filter -eq 1 ]]; then
+	echo -e "${WHITE}[+]${RED}-f :Added filter to remove web hosting fluff${WHITE}[+]${ENDCOLOR}"
+	WebHosting='amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com'
+else 
+	#Some garbage nothing name so that filter out Greps dont filter out everything 
+	WebHosting='nothing.fake.xyz'
+fi
+
+# -r arg
+if [[ $Resolve -eq 1 ]]; then
+	echo -e "${WHITE}[+]${RED}-r :Provided domains will not have their IPs added to the scope${WHITE}[+]${ENDCOLOR}"
+	DoNotresolveProvidedDomains
+else 
+	echo -e "${WHITE}[+]${RED}The resolved IP address(es) for provided domains were included${WHITE}[+]${ENDCOLOR}"
+	resolveProvidedDomains
+fi
+
+echo -e "${WHITE}[+]${PURPLE}The following are the domains and IP addresses that will be ran through OSINT tools ${WHITE}[+]${ENDCOLOR}"
+
+
+cat inscopeips.txt 2>/dev/null
 cat $domain
 
 echo "Please confirm these settings are accurate"
@@ -278,7 +342,7 @@ currentTool=HOST
 filename=$(cat alivesubdomains1.txt)
 for i in $filename; do
 	loadscreen
-	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' ; then
+	if echo $i| grep -E "$WebHosting" ; then
 		:
 	else
 		host $i >> resolve1.txt ||true
@@ -286,7 +350,7 @@ for i in $filename; do
 done
 
 cat resolve1.txt | sort -u > resolve2.txt 
-cat resolve2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+cat resolve2.txt | grep -vE "$WebHosting" | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
 currentTool=whois
 while read i;  do
 	loadscreen
@@ -329,14 +393,14 @@ currentTool=HOST-cero
 filename=$(cat cero-out.txt)
 for i in $filename; do
 	loadscreen
-	if echo $i| grep -E 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net' ; then
+	if echo $i| grep -E "$WebHosting" ; then
 		:
 	else
 		host $i >> cero1.txt ||true
 	fi
 done
 cat cero1.txt | sort -u > cero2.txt 
-cat cero2.txt | grep -vE 'amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com' | grep -v mail | grep -v '3(NXDOMAIN)' >> ceroresolve.txt ||true
+cat cero2.txt | grep -vE "$WebHosting"  | grep -v mail | grep -v '3(NXDOMAIN)' >> ceroresolve.txt ||true
 currentTool=whois-cero
 while read i;  do
 	loadscreen
@@ -370,8 +434,29 @@ cat inscopeDomains1.txt | grep "has address"| sed 's/has address/:/g' | sort -u 
 #==========================================
 currentTool=Filecleanup
 loadscreen
-rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt scan-urls.txt scan-emails.txt
+#Comment line below for troubleshoooting
+rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt resolve3.txt scan-urls.txt scan-emails.txt sublist.txt
 
+#Final CLI output file
+echo "#=============================================" > Finalout.txt
+echo "#================ Domains ====================" >> Finalout.txt
+echo "#=========== Alive and inscope ===============" >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+cat inscopeDomains.txt >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+echo "#================ Domains ====================" >> Finalout.txt
+echo "#======= Alive regardless of inscope =========" >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+cat ResolveFinal.txt >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+echo "#================ Domains ====================" >> Finalout.txt
+echo "#============ All not resolved ===============" >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+cat subdomains.txt >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+echo "#================= Alias' ====================" >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+cat Alias.txt >> Finalout.txt
 #==========================================
 #========= Output =========================
 #==========================================
@@ -381,11 +466,7 @@ firefox ./results.html > /dev/null &
 
 echo " "
 figlet output
-echo "Full list of alive inscope domains found with resolved IPs $dir/inscopeDomains.txt"
-echo " "
-echo "Full list of domains found with resolved IPs $dir/ResolveFinal.txt"
-echo " "
-echo "Full list of domains found $dir/subdomains.txt. This can be reran with the tool to possibly find more domains"
+cat Finalout.txt
 echo " "
 echo "All files can be found in the output directory $dir"
 echo " "

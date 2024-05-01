@@ -15,11 +15,40 @@ By default SubEnoom will try to only show domains that are present in the domain
 git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./subenoom.sh
 ```
 
-### Install
+### Install Locally
 
 ```
 ./setup.sh
 ```
+
+### Install with Docker
+
+```
+```
+
+```
+```
+
+### Configuration 
+
+### Add API keys to the following configs on your host for max results.
+
+Amass:
+```
+amass.config
+```
+theHarvester:
+```
+/etc/theHarvester/api-keys.yaml
+```
+
+If using docker, update harvester.config this will be copied to the apikey location when the image is built
+
+Subfinder:
+```
+subfinder.config
+```
+
 
 ### Syntax
 
@@ -50,20 +79,5 @@ example2.com
 ```
 
 
-### Add API keys to the following configs on your host for max results.
-
-Amass:
-```
-~/.config/amass/config.ini
-```
-theHarvester:
-```
-/etc/theHarvester/api-keys.yaml
-```
-
-Subfinder:
-```
-~/.config/subfinder/provider-config.yaml
-```
 
 

@@ -35,7 +35,7 @@ git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./s
 
 Amass:
 ```
-amass.config
+amass.keys
 ```
 theHarvester:
 ```

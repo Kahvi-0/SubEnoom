@@ -39,8 +39,9 @@ Note: make sure to use --rm so the container does not persist
 ```
 docker run -v $(pwd)/app:/tmp -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /tmp/out1.txt"
 ```
-
-The output files will be in the `app` directory on the host
+```diff
+- The output files will be in the `app` directory on the host
+```
 
 **Cleanup docker: remove image**
 

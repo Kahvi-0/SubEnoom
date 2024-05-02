@@ -8,3 +8,4 @@ go install github.com/lc/gau/v2/cmd/gau@latest
 go install github.com/tomnomnom/httprobe@latest
 go install github.com/glebarez/cero@latest
 go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install github.com/owasp-amass/amass/v4/...@master

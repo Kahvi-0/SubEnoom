@@ -14,8 +14,8 @@ CYAN="\e[36m"
 ENDCOLOUR="\e[0m"
 
 #Change to your own api file if needed
-amassConfig=../amass.config
-subfinderconfig=../subfinder.config
+amassConfig=$(pwd)/amass.config
+subfinderconfig=$(pwd)/subfinder.config
 #theharvesterConfig= ../harvester.config
 
 help_screen() {
@@ -81,7 +81,7 @@ stats() {
 }
 
 
-while getopts ":d:o:h:rf" option; do
+while getopts ":d:o:h:rfa" option; do
 	case "${option}" in
 		d) # List of domains and IPs
 			domain=$(pwd)/${OPTARG};;
@@ -91,6 +91,8 @@ while getopts ":d:o:h:rf" option; do
 			Resolve=1;;
 		f) # Add filter for web hosting
 			filter=1;;
+		a) # Skip amass?
+			amass=1;;
 		h) # Display Help
 			help_screen
 			exit 1;;
@@ -130,13 +132,6 @@ cd $dir
 #=======================================================
 #========= Setup for script options ====================
 #=======================================================
-
-# for -f
-
-
-
-# for -r
-#if -r is not provided, resolve Ips for domains and add those IPs to the list of inscope IPs
 resolveProvidedDomains() {
 	file=$(cat $domain)
 	for i in $file; do
@@ -190,6 +185,11 @@ else
 	resolveProvidedDomains
 fi
 
+if [[ $amass -eq 1 ]]; then
+	echo -e "${WHITE}[+]${RED}Amass will not be ran${WHITE}[+]${ENDCOLOR}"
+fi
+
+
 echo -e "${WHITE}[+]${PURPLE}The following are the domains and IP addresses that will be ran through OSINT tools ${WHITE}[+]${ENDCOLOR}"
 
 
@@ -228,19 +228,29 @@ for i in $file; do
 
 # AMASS
 ## Only using list of input hosts
-file=$(cat InputHosts.txt)
-currentTool="Amass (can take a while)"
-for i in $file; do
-	loadscreen
-	# Amass active + normal. -nf points the "already known subdomain names" to the provided file as to not ignore domains in the local DB
-	echo "Start" > amass.txt
-	amass enum  -d $i -active -log amass.log -config $amassConfig -nf InputHosts.txt -p 80,443 >> amass.txt
-	# Carve out the useful ASN info
-	echo $i >> ASN.txt
-	sed -n '/OWASP Amass/,/The enumeration/{//!p}' amass.txt >> ASN.txt
-	# Carve out domains 
-	sed -n '/Start/,/OWASP/{//!p}' amass.txt >> scan-subdomains.txt
-done
+
+
+
+# -a arg
+if [[ $amass -eq 1 ]]; then
+	echo ""
+else
+	file=$(cat InputHosts.txt)
+	currentTool="Amass (can take a while)"
+	for i in $file; do
+		loadscreen
+		# Amass active + normal. -nf points the "already known subdomain names" to the provided file as to not ignore domains in the local DB
+		echo "Start" > amass.txt
+		amass enum  -d $i -active -log amass.log -config $amassConfig -nf InputHosts.txt -p 80,443 >> amass.txt
+		# Carve out the useful ASN info
+		echo $i >> ASN.txt
+		sed -n '/OWASP Amass/,/The enumeration/{//!p}' amass.txt >> ASN.txt
+		# Carve out domains 
+		sed -n '/Start/,/OWASP/{//!p}' amass.txt >> scan-subdomains.txt
+	done
+fi
+
+
 
 # crt.sh
 currentTool=crt.sh

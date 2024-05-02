@@ -229,12 +229,12 @@ for i in $file; do
 # AMASS
 ## Only using list of input hosts
 file=$(cat InputHosts.txt)
-currentTool=Amass
+currentTool="Amass (can take a while)"
 for i in $file; do
 	loadscreen
 	# Amass active + normal. -nf points the "already known subdomain names" to the provided file as to not ignore domains in the local DB
 	echo "Start" > amass.txt
-	amass enum  -d $i -active -log amass.log -config $amassConfig -nf InputHosts.txt -p 80,443,8080 >> amass.txt
+	amass enum  -d $i -active -log amass.log -config $amassConfig -nf InputHosts.txt -p 80,443 >> amass.txt
 	# Carve out the useful ASN info
 	echo $i >> ASN.txt
 	sed -n '/OWASP Amass/,/The enumeration/{//!p}' amass.txt >> ASN.txt

@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN apt-get update -qq -y && apt-get upgrade -qq -y 
 RUN apt purge theharvester
-RUN apt-get -f install -qq  curl wget gnupg git gobuster golang theharvester host -y
+RUN apt-get -f install -qq  curl wget gnupg git host -y
 RUN bash ./setup.sh
 RUN chmod +x ./subenoom.sh
 RUN mkdir wordlists

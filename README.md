@@ -61,6 +61,37 @@ sudo docker rmi -f $(sudo docker images -aq)
 ```
 
 
+### Syntax
+
+```
+./subenoom.sh -d domains.txt -o outputdirname
+```
+
+Example
+
+```
+./subenoom.sh -d domains.txt -o DNSEnum 
+```
+
+Options:
+```
+-f  add a filter that removes results for shared web hosting domains such as amazonaws.com and akamaiedge.net
+-r  Do not resolve IPs for provided domains and add to scope
+-a do not run amass since it can be very time consuming
+```
+
+### Domain file format:
+
+```
+example.com
+example2.com
+1.1.1.1
+2.2.2.2-32
+3.3.3.3/24
+```
+
+
+
 ### Configuration 
 
 ### Add API keys to the following configs on your host for max results.
@@ -85,33 +116,6 @@ theharvester.config
 
 
 
-### Syntax
-
-```
-./subenoom.sh -d domains.txt -o outputdirname
-```
-
-Example
-
-```
-./subenoom.sh -d domains.txt -o DNSEnum 
-```
-
-Options:
-```
--f  add a filter that removes results for shared web hosting domains such as amazonaws.com and akamaiedge.net
--r  Do not resolve IPs for provided domains and add to scope 
-```
-
-### Domain file format:
-
-```
-example.com
-example2.com
-1.1.1.1
-2.2.2.2-32
-3.3.3.3/24
-```
 
 
 

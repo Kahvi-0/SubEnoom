@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN apt-get update -qq -y && apt-get upgrade -qq -y 
 RUN apt purge theharvester
-RUN apt-get -f install -qq  curl wget gnupg git gobuster golang theharvester host -y
+RUN apt-get -f install -qq whois curl wget gnupg git gobuster golang theharvester host -y
 RUN bash ./setup.sh
 RUN echo "export PATH=/root/go/bin:$PATH" >> /root/.bashrc
 RUN cp /root/go/bin/* /usr/bin/ 

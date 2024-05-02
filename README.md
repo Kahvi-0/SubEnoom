@@ -42,18 +42,19 @@ docker run -v $(pwd)/app:/tmp -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o
 
 The output files will be in the `app` directory on the host
 
-**Cleanup docker**
+**Cleanup docker: remove image**
 
-remove image
-
+List all images
 ```
 sudo docker images -aq
 ```
+
+Remove single image
 ```
 sudo docker rmi -f [image]
 ```
 
-Remove all
+Remove all images
 ```
 sudo docker rmi -f $(sudo docker images -aq)
 ```

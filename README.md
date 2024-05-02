@@ -30,14 +30,14 @@ chmod +x ./subenoom.sh
 Make sure to create scope.txt first
 
 ```
-docker build -t subnoom .
+sudo docker build -t subnoom .
 ```
 
 Note: the `/tmp` dir is where the output files are being stored within the container and mounted to the host at `/app`
 
 Note: make sure to use --rm so the container does not persist
 ```
-docker run -v $(pwd)/app:/tmp -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /tmp/out1.txt"
+sudo docker run -v $(pwd)/app:/tmp -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /tmp/out1.txt"
 ```
 ```diff
 - The output files will be in the `app` directory on the host

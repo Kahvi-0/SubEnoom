@@ -12,10 +12,14 @@ By default SubEnoom will try to only show domains that are present in the domain
 ### Download
 
 ```
-git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./subenoom.sh
+git clone https://github.com/Kahvi-0/SubEnoom.git 
 ```
 
 ### Install Locally
+
+```
+cd SubEnoom && chmod +x ./subenoom.sh
+```
 
 ```
 ./setup.sh
@@ -29,9 +33,12 @@ Make sure to create scope.txt first
 docker build -t subnoom .
 ```
 
+Note: the `/tmp` dir is where the output files are being stored within the container and mounted to the host at `/app`
 ```
-docker run -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o out1.txt"
+docker run -v $(pwd)/app:/tmp -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /tmp/out1.txt"
 ```
+
+The output files will be in the `app` directory on the host
 
 ### Configuration 
 

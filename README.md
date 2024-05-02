@@ -23,6 +23,8 @@ git clone https://github.com/Kahvi-0/SubEnoom.git && cd SubEnoom && chmod +x ./s
 
 ### Install with Docker
 
+Make sure to create scope.txt first
+
 ```
 docker build -t subnoom .
 ```

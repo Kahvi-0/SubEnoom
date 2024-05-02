@@ -36,20 +36,23 @@ docker run -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o out1.txt"
 ### Add API keys to the following configs on your host for max results.
 
 Amass:
+Script calls amass.config to be used which calls this file to be used for API keys
 ```
 amass.keys
 ```
-theHarvester:
-```
-/etc/theHarvester/api-keys.yaml
-```
-
-If using docker, update harvester.config this will be copied to the apikey location when the image is built
 
 Subfinder:
+Script calls this file to be used for api keys
 ```
 subfinder.config
 ```
+
+theHarvester: 
+This file is moved to correct location when docker image is built. If using local install put contents into `~/.theHarvester/api-keys.yaml`
+```
+theharvester.config
+```
+
 
 
 ### Syntax

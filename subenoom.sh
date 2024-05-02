@@ -13,9 +13,10 @@ GREEN="\e[32m"
 CYAN="\e[36m"
 ENDCOLOUR="\e[0m"
 
-#Configs:
-amassConfig=~/.config/amass/config.ini
-subfinderconfig=
+#Change to your own api file if needed
+amassConfig=../amass.config
+subfinderconfig=../subfinder.config
+#theharvesterConfig= ../harvester.config
 
 help_screen() {
 	figlet HELP SCREEN
@@ -475,5 +476,6 @@ echo "Expecting more results?"
 echo " "
 echo "Add API keys to the following tools"
 echo "- Assetfinder: https://github.com/tomnomnom/assetfinder"
-echo "- theHarvester"
-echo "- Amass"
+echo "- theHarvester: /etc/theHarvester/api-keys.yaml"
+echo "- Amass: ~/.config/amass/config.ini"
+echo "- subfinder: ~/.config/subfinder/provider-config.yaml"

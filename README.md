@@ -51,7 +51,7 @@ Example
 
 **Run with Docker**
 
-Note: the `/app` dir is where the output files are being stored within the container and mounted to the host at `/app`
+Note: the `/app` dir is where the output files are being stored within the container and mounted to the host at `app` in the running folder
 
 Note: make sure to use --rm so the container does not persist
 ```

@@ -33,36 +33,11 @@ Make sure to create scope.txt first
 sudo docker build -t subnoom .
 ```
 
-Note: the `/tmp` dir is where the output files are being stored within the container and mounted to the host at `/app`
+-----
 
-Note: make sure to use --rm so the container does not persist
-```
-sudo docker run -v $(pwd)/app:/app/app -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /app/app/out1.txt"
-```
-```diff
-- The output files will be in the `app` directory on the host
-```
+### Usage
 
-**Cleanup docker: remove image**
-
-List all images
-```
-sudo docker images -aq
-```
-
-Remove single image
-```
-sudo docker rmi -f [image]
-```
-
-Remove all images
-```
-sudo docker rmi -f $(sudo docker images -aq)
-```
-
-
-### Syntax
-
+**Run locally**
 ```
 ./subenoom.sh -d domains.txt -o outputdirname
 ```
@@ -71,6 +46,19 @@ Example
 
 ```
 ./subenoom.sh -d domains.txt -o DNSEnum 
+```
+
+
+**Run with Docker**
+
+Note: the `/app` dir is where the output files are being stored within the container and mounted to the host at `/app`
+
+Note: make sure to use --rm so the container does not persist
+```
+sudo docker run -v $(pwd)/app:/app/app -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /app/app/out"
+```
+```diff
+- The output files will be in the `app` directory on the host
 ```
 
 Options:
@@ -89,8 +77,26 @@ example2.com
 2.2.2.2-32
 3.3.3.3/24
 ```
+------
 
+**Cleanup docker: remove image**
 
+List all images
+```
+sudo docker images -aq
+```
+
+Remove single image
+```
+sudo docker rmi -f [image]
+```
+
+Remove all images
+```
+sudo docker rmi -f $(sudo docker images -aq)
+```
+
+------
 
 ### Configuration 
 

@@ -37,7 +37,7 @@ Note: the `/tmp` dir is where the output files are being stored within the conta
 
 Note: make sure to use --rm so the container does not persist
 ```
-sudo docker run -v $(pwd)/app:/tmp -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /tmp/out1.txt"
+sudo docker run -v $(pwd)/app:/app/app -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /app/app/out1.txt"
 ```
 ```diff
 - The output files will be in the `app` directory on the host

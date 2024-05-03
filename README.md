@@ -1,5 +1,5 @@
 # SubEnoom
-Version 3.1
+Version 4.0
 
 ![image](https://github.com/Kahvi-0/SubEnoom/assets/46513413/5aa80594-aade-4ff9-a603-adda3dc6df2a)
 

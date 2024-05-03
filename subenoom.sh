@@ -15,7 +15,7 @@ ENDCOLOUR="\e[0m"
 
 #Change to your own api file if needed
 amassConfig=$(pwd)/amass.config
-subfinderconfig=$(pwd)/subfinder.config
+subfinderconfig="-pc $(pwd)/subfinder.config"
 #theharvesterConfig= ../harvester.config
 
 help_screen() {

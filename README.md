@@ -4,7 +4,7 @@ Version 4.0
 ![image](https://github.com/Kahvi-0/SubEnoom/assets/46513413/5aa80594-aade-4ff9-a603-adda3dc6df2a)
 
 
-Script that combines many OSINT tools. Can intake domains, IPs, and subnets. 
+Tool that combines many subdomain tools and methods. Can intake domains, IPs, and subnets. 
 
 By default SubEnoom will try to only show domains that are present in the domain list you provide. Try to give at least the highest most domain if possible. 
 

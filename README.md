@@ -68,7 +68,7 @@ Options:
 -a do not run amass since it can be very time consuming
 ```
 
-### Domain file format:
+### Scope file format:
 
 ```
 example.com

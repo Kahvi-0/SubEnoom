@@ -29,6 +29,8 @@ help_screen() {
 	printf "\n"
 	echo '-r to not resolve and add IP to scope'
 	printf "\n"
+ 	echo '-a to not run amass as it can take a long time to finish'
+  	printf "\n"
 }
 
 loadscreen() {

@@ -116,7 +116,7 @@ subfinder.config
 theHarvester: 
 This file is moved to correct location when docker image is built. If using local install put contents into `~/.theHarvester/api-keys.yaml`
 ```
-theharvester.config
+harvester.config
 ```
 
 

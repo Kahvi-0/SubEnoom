@@ -26,8 +26,7 @@ chmod +x ./subenoom.sh
 ```
 
 ### Install with Docker
-
-Make sure to create scope.txt first
+<code style="color : red">Make sure to create scope.txt first</code>
 
 ```
 sudo docker build -t subnoom .
@@ -57,9 +56,9 @@ Note: make sure to use --rm so the container does not persist
 ```
 sudo docker run -v $(pwd)/app:/app/app -ti --rm subnoom -c "./subenoom.sh -d scope.txt -o /app/app/out"
 ```
-```diff
-- The output files will be in the `app` directory on the host
-```
+
+<code style="color : red">The output files will be in the `app` directory on the host</code>
+
 
 Options:
 ```

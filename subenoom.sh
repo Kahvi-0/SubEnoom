@@ -226,6 +226,11 @@ currentTool=ReverseLookup
 file=$(cat inscopeips.txt)
 for i in $file; do
 	echo $i | dnsx -ptr -resp-only --silent >> ReverseIP.txt
+ 	echo $i | hakrevdns -r 8.8.8.8 -d >> ReverseIP.txt
+	echo $i | hakrevdns -r 1.1.1.1 -d >> ReverseIP.txt
+ 	echo $i | hakrevdns -r 9.9.9.9 -d >> ReverseIP.txt
+   	echo $i | hakrevdns -r 208.67.222.222 -d >> ReverseIP.txt
+     	echo $i | hakrevdns -r 8.26.56.26 -d >> ReverseIP.txt
 	done
 
 # AMASS

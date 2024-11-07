@@ -17,6 +17,9 @@ ENDCOLOUR="\e[0m"
 amassConfig=$(pwd)/amass.config
 subfinderconfig="-pc $(pwd)/subfinder.config"
 #theharvesterConfig= ../harvester.config
+#Add GO path to path to hopefully help prevent blunders
+export PATH="$HOME/go/bin:$PATH"
+
 
 help_screen() {
 	figlet HELP SCREEN

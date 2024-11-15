@@ -16,6 +16,7 @@ ENDCOLOUR="\e[0m"
 #Change to your own api file if needed
 wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.config
 wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/subfinder.config
+wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.keys
 amassConfig=$(pwd)/amass.config
 subfinderconfig="-pc $(pwd)/subfinder.config"
 #theharvesterConfig= ../harvester.config

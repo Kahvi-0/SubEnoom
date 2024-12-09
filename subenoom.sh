@@ -13,13 +13,15 @@ GREEN="\e[32m"
 CYAN="\e[36m"
 ENDCOLOUR="\e[0m"
 
-#Change to your own api file if needed
+# Default API file/config Locations
 wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.config
-wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/subfinder.config
-wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.keys
 amassConfig=$(pwd)/amass.config
-subfinderconfig="-pc $(pwd)/subfinder.config"
-#theharvesterConfig= ../harvester.config
+amassAPI=$(pwd)/amass.keys
+subfinderconfig=$(pwd)/subfinder.config
+HarvConfig=~/.theHarvester/api-keys.yaml
+
+
+
 #Add GO path to path to hopefully help prevent blunders
 export PATH="$HOME/go/bin:$PATH"
 
@@ -88,8 +90,7 @@ stats() {
 	echo " "
 }
 
-
-while getopts ":d:o:h:rfa" option; do
+while getopts ":d:o:h:m:s:k:rfa" option; do
 	case "${option}" in
 		d) # List of domains and IPs
 			domain=$(pwd)/${OPTARG};;
@@ -101,6 +102,12 @@ while getopts ":d:o:h:rfa" option; do
 			filter=1;;
 		a) # Skip amass?
 			amass=1;;
+		m) # set Amass config location
+			amassConfig=${OPTARG};;
+		s) # set subdinder config location
+			subfinderconfig=${OPTARG};;
+		k) # set Amass API key location
+			amassAPI=${OPTARG};;
 		h) # Display Help
 			help_screen
 			exit 1;;
@@ -116,7 +123,31 @@ if [ -z "$domain" ] || [ -z "$dir" ]; then
     exit 1
 fi
 
-# Add section for target ports if wanted
+#=======================================================
+#========= Checking existence of API files =============
+#=======================================================
+file_exist() {
+	if [ -f $FILE ]; then
+	   echo ""
+	else
+ 	  echo "File $FILE does not exist."
+ 	  exit 1
+	fi }
+
+FILE=$amassConfig
+file_exist
+FILE=$subfinderconfig
+file_exist
+FILE=$amassAPI
+file_exist
+
+rm ./amass.config
+wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.config
+sed -i -e "s|datasources:.*$|datasources: $amassAPI|g" amass.config
+
+#Dont check for this, should be okay to run without. Cant set path through tool normally, so kinda annoying
+#FILE=$HarvConfig
+#file_exist
 
 #=======================================================
 #========= Setup directoy for output ===================
@@ -167,17 +198,18 @@ DoNotresolveProvidedDomains() {
 		done
 }
 
+
 #=============================================
 #========= Script Opening ====================
 #=============================================
 
 figlet Sub e Noom
-echo -e "${WHITE}[+]${BLUE} SubeNoom v3.1 ${WHITE}[+]${ENDCOLOR}"
+echo -e "${WHITE}[+]${BLUE} SubeNoom v4 ${WHITE}[+]${ENDCOLOR}"
 echo " "
 
 # -f arg
 if [[ $filter -eq 1 ]]; then
-	echo -e "${WHITE}[+]${RED}-f :Added filter to remove web hosting fluff${WHITE}[+]${ENDCOLOR}"
+	echo -e "${WHITE}[+]${RED}-f invoked: Added filter to remove web hosting fluff${WHITE}[+]${ENDCOLOR}"
 	WebHosting='amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com'
 else 
 	#Some garbage nothing name so that filter out Greps dont filter out everything 
@@ -186,7 +218,7 @@ fi
 
 # -r arg
 if [[ $Resolve -eq 1 ]]; then
-	echo -e "${WHITE}[+]${RED}-r :Provided domains will not have their IPs added to the scope${WHITE}[+]${ENDCOLOR}"
+	echo -e "${WHITE}[+]${RED}-r invoked: Provided domains will not have their IPs added to the scope${WHITE}[+]${ENDCOLOR}"
 	DoNotresolveProvidedDomains
 else 
 	echo -e "${WHITE}[+]${RED}The resolved IP address(es) for provided domains were included${WHITE}[+]${ENDCOLOR}"
@@ -197,9 +229,14 @@ if [[ $amass -eq 1 ]]; then
 	echo -e "${WHITE}[+]${RED}Amass will not be ran${WHITE}[+]${ENDCOLOR}"
 fi
 
-
+echo -e ""
+echo -e "${WHITE}[+]${RED}Amass config file: $amassConfig${WHITE}[+]${ENDCOLOR}"
+echo -e "${WHITE}[+]${RED}Amass API file: $amassAPI${WHITE}[+]${ENDCOLOR}"
+echo -e "${WHITE}[+]${RED}Subfinder config file: $subfinderconfig${WHITE}[+]${ENDCOLOR}"
+echo -e "${WHITE}[+]${RED}TheHarvester config file: $HarvConfig${WHITE}[+]${ENDCOLOR}"
+echo -e ""
 echo -e "${WHITE}[+]${PURPLE}The following are the domains and IP addresses that will be ran through OSINT tools ${WHITE}[+]${ENDCOLOR}"
-
+echo -e ""
 
 cat inscopeips.txt 2>/dev/null
 cat $domain
@@ -254,12 +291,13 @@ else
 		loadscreen
 		# Amass active + normal. -nf points the "already known subdomain names" to the provided file as to not ignore domains in the local DB
 		echo "Start" > amass.txt
-		amass enum  -d $i -active -log amass.log -config $amassConfig -nf InputHosts.txt -p 80,443 >> amass.txt
+		sed -e "/domains:/a\\  - $i" < $amassConfig > tmp.yaml
+		amass enum  -d $i -active -log amass.log -config tmp.yaml -nf InputHosts.txt -p 80,443 >> amass.txt
 		# Carve out the useful ASN info
 		echo $i >> ASN.txt
 		sed -n '/OWASP Amass/,/The enumeration/{//!p}' amass.txt >> ASN.txt
 		# Carve out domains 
-		sed -n '/Start/,/OWASP/{//!p}' amass.txt >> scan-subdomains.txt
+		cat amass.txt | grep FQDN | awk -F '.(FQDN)' '{print$1}' >> scan-subdomains.txt
 	done
 fi
 
@@ -323,7 +361,7 @@ subfinder -up
 filename=$(cat InputHosts.txt)
 for i in $filename; do 
 	loadscreen
-	subfinder -d $i -silent -all $subfinderconfig | sort -u >> scan-subdomains.txt
+	subfinder -d $i -silent -all -pc $subfinderconfig | sort -u >> scan-subdomains.txt
 done
 
 # Brute Force with gobuster

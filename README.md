@@ -65,6 +65,9 @@ Options:
 -f  add a filter that removes results for shared web hosting domains such as amazonaws.com and akamaiedge.net
 -r  Do not resolve IPs for provided domains and add to scope
 -a do not run amass since it can be very time consuming
+-k custom amass key location
+-s custom subfinder config file
+-m custom amass config location
 ```
 
 ### Scope file format:

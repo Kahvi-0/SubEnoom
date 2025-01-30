@@ -417,7 +417,7 @@ for i in $filename; do
 done
 
 cat resolve1.txt | sort -u > resolve2.txt 
-cat resolve2.txt | grep -vE "$WebHosting" | grep -v mail | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
+cat resolve2.txt | grep -vE "$WebHosting" | grep -v "mail is handled" | grep -v '3(NXDOMAIN)' >> resolve.txt ||true
 currentTool=whois
 while read i;  do
 	loadscreen
@@ -467,7 +467,7 @@ for i in $filename; do
 	fi
 done
 cat cero1.txt | sort -u > cero2.txt 
-cat cero2.txt | grep -vE "$WebHosting"  | grep -v mail | grep -v '3(NXDOMAIN)' >> ceroresolve.txt ||true
+cat cero2.txt | grep -vE "$WebHosting"  | grep -v "mail is handled" | grep -v '3(NXDOMAIN)' >> ceroresolve.txt ||true
 currentTool=whois-cero
 while read i;  do
 	loadscreen

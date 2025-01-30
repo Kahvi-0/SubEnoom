@@ -14,7 +14,6 @@ CYAN="\e[36m"
 ENDCOLOUR="\e[0m"
 
 # Default API file/config Locations
-wget https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.config
 amassConfig=$(pwd)/amass.config
 amassAPI=$(pwd)/amass.keys
 subfinderconfig=$(pwd)/subfinder.config
@@ -131,14 +130,19 @@ file_exist() {
 	   echo ""
 	else
  	  echo "File $FILE does not exist."
- 	  exit 1
+          echo ""
+	  echo "Downloading template"
+          wget $SOURCE
+ 	  #exit 1
 	fi }
 
-FILE=$amassConfig
-file_exist
+#FILE=$amassConfig
+#file_exist
 FILE=$subfinderconfig
+SOURCE="https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/subfinder.config"
 file_exist
 FILE=$amassAPI
+SOURCE="https://raw.githubusercontent.com/Kahvi-0/SubEnoom/refs/heads/main/amass.keys"
 file_exist
 
 rm ./amass.config

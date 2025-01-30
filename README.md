@@ -122,7 +122,13 @@ This file is moved to correct location when docker image is built. If using loca
 harvester.config
 ```
 
+# Troubleshooting
+-------
 
+Errors with Amass config - this may be related to your host having a version of amass prior to 4.0. Double check what is called by default.
+```
+Failed to load the configuration file
+```
 
 
 

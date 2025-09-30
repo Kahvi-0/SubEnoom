@@ -32,7 +32,7 @@ help_screen() {
 	printf "Options\n"
 	printf "\n"
 	echo '-f to add a filter to remove results that are tied to'
-	printf "amazonaws.com|office.com|microsoft.com|cloudflare.com|akadns.net|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com\n"
+	printf "amazonaws.com|office.com|microsoft.com|cloudflare.com|akadns.net|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com|fios.verizon.net\n"
 	printf "\n"
 	echo '-r to not resolve and add IP to scope'
 	printf "\n"
@@ -214,7 +214,7 @@ echo " "
 # -f arg
 if [[ $filter -eq 1 ]]; then
 	echo -e "${WHITE}[+]${RED}-f invoked: Added filter to remove web hosting fluff${WHITE}[+]${ENDCOLOR}"
-	WebHosting='amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com'
+	WebHosting='amazonaws.com|office.com|microsoft.com|cloudflare.com|herokudns.com|cloudfront.net|akamai.net|akamaiedge.net|awsglobalaccelerator.com|fios.verizon.net'
 else 
 	#Some garbage nothing name so that filter out Greps dont filter out everything 
 	WebHosting='nothing.fake.xyz'

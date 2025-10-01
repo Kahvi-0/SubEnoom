@@ -1,9 +1,13 @@
 #Installs
 
-apt-get  -qq  install golang-go gobuster theharvester figlet
+apt-get  -qq  install golang-go gobuster figlet
 
 # THe harvester reqs
 pip3 install ujson aiomultiprocess aiohttp censys aiodns aiosqlite pyppeteer uvloop
+
+#UV for theHarvester 
+
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 #
 go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest

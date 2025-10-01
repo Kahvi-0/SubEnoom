@@ -352,16 +352,17 @@ filename=$(cat InputHosts.txt)
 git clone https://github.com/laramies/theHarvester
 cd theHarvester
 uv sync
-cd ..
 for i in $filename; do 
 	loadscreen
-	uv run theHarvester -d $i -b all > theHarvester.txt
+	uv run theHarvester -d $i -b all > ../theHarvester.txt
+	cd ..
 	cat theHarvester.txt >> theHarvester.log
 	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort -u >> scan-subdomains.txt
 	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | tail -n +3 | sort -u >> hostinfo.txt
 	cat theHarvester.txt | sed -n '/\[\*\] Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> scan-emails.txt
 	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> scan-urls.txt
 done
+
 
 #Subfinder
 currentTool=Subfinder

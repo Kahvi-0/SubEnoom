@@ -272,13 +272,15 @@ domain=ExpandedScope.txt
 currentTool=ReverseLookup
 file=$(cat inscopeips.txt)
 for i in $file; do
+        loadscreen
 	echo $i | dnsx -ptr -resp-only --silent >> ReverseIP.txt
  	echo $i | hakrevdns -r 8.8.8.8 -d >> ReverseIP.txt
 	echo $i | hakrevdns -r 1.1.1.1 -d >> ReverseIP.txt
  	echo $i | hakrevdns -r 9.9.9.9 -d >> ReverseIP.txt
    	echo $i | hakrevdns -r 208.67.222.222 -d >> ReverseIP.txt
      	echo $i | hakrevdns -r 8.26.56.26 -d >> ReverseIP.txt
-	done
+	cat ReverseIP.txt >> scan-subdomains.txt
+        done
 
 # AMASS
 ## Only using list of input hosts
@@ -294,14 +296,8 @@ else
 	for i in $file; do
 		loadscreen
 		# Amass active + normal. -nf points the "already known subdomain names" to the provided file as to not ignore domains in the local DB
-		echo "Start" > amass.txt
-		sed -e "/domains:/a\\  - $i" < $amassConfig > tmp.yaml
-		amass enum  -d $i -active -log amass.log -config tmp.yaml -nf InputHosts.txt -p 80,443 >> amass.txt
-		# Carve out the useful ASN info
-		echo $i >> ASN.txt
-		sed -n '/OWASP Amass/,/The enumeration/{//!p}' amass.txt >> ASN.txt
-		# Carve out domains 
-		cat amass.txt | grep FQDN | awk -F '.(FQDN)' '{print$1}' >> scan-subdomains.txt
+		amass subs -d $i -config $amassConfig -names | tee -a amass.txt
+                cat amass.txt >> scan-subdomains.txt
 	done
 fi
 
@@ -312,7 +308,8 @@ currentTool=crt.sh
 file=$(cat InputHosts.txt)
 for i in $file; do
 	loadscreen
-	curl https://crt.sh/?q=$i 2>/dev/null | grep "<TD>" | grep -v -e "style=" | sed 's/<TD>//g; s/<\/TD>//g; s/<BR>/\n/g' | tr -d ' ' | sort -u >> scan-subdomains.txt
+	curl https://crt.sh/?q=$i 2>/dev/null | grep "<TD>" | grep -v -e "style=" | sed 's/<TD>//g; s/<\/TD>//g; s/<BR>/\n/g' | tr -d ' ' | sort -u >> crtsh.txt
+        cat crtsh.txt >> scan-subdomains.txt
 done
 
 # Assetfinder
@@ -321,7 +318,8 @@ file=$(cat InputHosts.txt)
 currentTool=Assetfinder
 for i in $file; do
 	loadscreen
-	echo $i | assetfinder --subs-only >> scan-subdomains.txt
+	echo $i | assetfinder --subs-only >> assetfinder.txt
+        cat assetfinder.txt >> scan-subdomains.txt
 done
 
 # Gau
@@ -329,7 +327,8 @@ currentTool=Gau
 file=$(cat InputHosts.txt)
 for i in $file; do
 	loadscreen
-	echo $i | gau --subs --blacklist png,jpg,jpeg,gif,css,svg,woff,woff2,map,pdf,js,webp,ttf,eot,webp,jfif --fc 404,400,405,500 >> scan-urls.txt	
+	echo $i | gau --subs --blacklist png,jpg,jpeg,gif,css,svg,woff,woff2,map,pdf,js,webp,ttf,eot,webp,jfif --fc 404,400,405,500 >> gau.txt	
+        cat gau.txt >> scan-urls.txt
 done
 	
 cat scan-urls.txt | grep -oP '(?<=^https:\/\/).*?(?=\/|\?|$)' | sort -u >> scan-subdomains.txt
@@ -354,15 +353,14 @@ cd theHarvester
 uv sync
 for i in $filename; do 
 	loadscreen
-	uv run theHarvester -d $i -b all > ../theHarvester.txt
-	cd ..
+	uv run theHarvester -d $i -b all > theHarvester.txt
 	cat theHarvester.txt >> theHarvester.log
-	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort -u >> scan-subdomains.txt
-	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | tail -n +3 | sort -u >> hostinfo.txt
-	cat theHarvester.txt | sed -n '/\[\*\] Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> scan-emails.txt
-	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> scan-urls.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | awk -F ":" '{print$1}' | tail -n +3 | sort -u >> ../scan-subdomains.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Hosts found/,$p' | tail -n +3 | sort -u >> ../hostinfo.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Emails found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> ../scan-emails.txt
+	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> ../scan-urls.txt
 done
-
+cd ..
 
 #Subfinder
 currentTool=Subfinder
@@ -370,7 +368,8 @@ subfinder -up
 filename=$(cat InputHosts.txt)
 for i in $filename; do 
 	loadscreen
-	subfinder -d $i -silent -all -pc $subfinderconfig | sort -u >> scan-subdomains.txt
+	subfinder -d $i -silent -all -pc $subfinderconfig | sort -u >> subfinder.txt
+        cat subfinder.txt >> scan-subdomains.txt
 done
 
 # Brute Force with gobuster
@@ -381,7 +380,8 @@ for i in $filename; do
 	loadscreen
 	echo "Gobusting subdomains for $i"
 	gobuster dns -q -d $i -w sublist.txt -o gobust.txt
-	cat gobust.txt | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | awk -F ' ' '{print $2}' | sort | uniq >> scan-subdomains.txt && rm gobust.txt
+	cat gobust.txt | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | awk -F ' ' '{print $2}' | sort | uniq >> gobusterresults.txt
+        cat gobusterresults.txt >> scan-subdomains.txt
 done
 
 
@@ -392,7 +392,7 @@ currentTool=Sorting
 loadscreen
 sort -u scan-subdomains.txt| grep -v "No names were discovered" > subdomains.txt
 cat scan-urls.txt | sort -u >> urls.txt
-cat scan-emails.txt | sort -u >> emails.txt
+Acat scan-emails.txt | sort -u >> emails.txt
 
 
 #===================================================================
@@ -529,16 +529,34 @@ echo "#=============================================" >> Finalout.txt
 echo "#================= Alias' ====================" >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
 cat Alias.txt >> Finalout.txt
+
 #==========================================
 #========= Output =========================
 #==========================================
 
 wget -q https://raw.githubusercontent.com/Kahvi-0/SubEnoom/main/results.html
-firefox ./results.html > /dev/null &
+firefox ./results.html 2> /dev/null &
 
 echo " "
 figlet output
 cat Finalout.txt
+
+echo "#========================================"
+echo "#=========Stats=========================="
+echo "#========================================"
+echo ""
+wc -l ReverseIP.txt | awk -F " " '{print "ReverseIP Search Results: " $1}'
+wc -l amass.txt | awk -F " " '{print "Amass Results: " $1}'
+wc -l crtsh.txt | awk -F " " '{print "Crt.sh Results: " $1}'
+wc -l assetfinder.txt | awk -F " " '{print "AssetFinder Results: " $1}'
+wc -l gau.txt | awk -F " " '{print "Gau Results: " $1}'
+wc -l waybackurls.txt | awk -F " " '{print "Waybackurls Results: " $1}'
+wc -l theHarvester/theHarvester.txt | awk -F " " '{print "theHarvester Results: " $1}'
+wc -l subfinder.txt | awk -F " " '{print "subfinder Results: " $1}'
+wc -l gobusterresults.txt | awk -F " " '{print "GoBuster Results: " $1}'
+wc -l cero-out.txt | awk -F " " '{print "Cero Results: " $1}'
+
+
 echo " "
 echo "All files can be found in the output directory $dir"
 echo " "

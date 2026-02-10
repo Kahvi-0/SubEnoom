@@ -507,14 +507,41 @@ cat inscopeDomains1.txt | grep "has address"| sed 's/has address/:/g' | sort -u 
 currentTool=Filecleanup
 loadscreen
 #Comment line below for troubleshoooting
-rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt resolve3.txt scan-urls.txt scan-emails.txt sublist.txt
+rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt resolve3.txt scan-urls.txt scan-emails.txt sublist.txt inscopeDomains1.txt alivesubdomains1.html scan-subdomains.txt inscopeDomains1.txt
+mkdir toolOutput
+mv amass.txt assetfinder.txt cero* crtsh.txt gau.txt gobusterresults.txt hostinfo.txt ReverseIP.txt waybackurls.txt subfinder.txt theHarvester urls.txt toolOutput
+
+awk -F':' '
+{
+  gsub(/^[ \t]+|[ \t]+$/, "", $1)
+  gsub(/^[ \t]+|[ \t]+$/, "", $2)
+  ip[$2] = ip[$2] "\n - " tolower($1)
+}
+END {
+  for (i in ip) {
+    owners = ""
+    delete seen
+
+    cmd = "whois " i " | egrep -i \"^(OrgName):\""
+    while ((cmd | getline line) > 0) {
+      if (!seen[line]++) owners = owners "\n Owner: " line
+    }
+    close(cmd)
+
+    print i
+    if (owners != "") print substr(owners, 2)  
+    else print " Owner: Unknown"
+    print ip[i] "\n"
+  }
+}
+' inscopeDomains.txt > CleanedDomains.txt
 
 #Final CLI output file
 echo "#=============================================" > Finalout.txt
 echo "#================ Domains ====================" >> Finalout.txt
 echo "#=========== Alive and inscope ===============" >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
-cat inscopeDomains.txt >> Finalout.txt
+cat CleanedDomains.txt >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
 echo "#================ Domains ====================" >> Finalout.txt
 echo "#======= Alive regardless of inscope =========" >> Finalout.txt
@@ -545,16 +572,16 @@ echo "#========================================"
 echo "#=========Stats=========================="
 echo "#========================================"
 echo ""
-wc -l ReverseIP.txt | awk -F " " '{print "ReverseIP Search Results: " $1}'
-wc -l amass.txt | awk -F " " '{print "Amass Results: " $1}'
-wc -l crtsh.txt | awk -F " " '{print "Crt.sh Results: " $1}'
-wc -l assetfinder.txt | awk -F " " '{print "AssetFinder Results: " $1}'
-wc -l gau.txt | awk -F " " '{print "Gau Results: " $1}'
-wc -l waybackurls.txt | awk -F " " '{print "Waybackurls Results: " $1}'
-wc -l theHarvester/theHarvester.txt | awk -F " " '{print "theHarvester Results: " $1}'
-wc -l subfinder.txt | awk -F " " '{print "subfinder Results: " $1}'
-wc -l gobusterresults.txt | awk -F " " '{print "GoBuster Results: " $1}'
-wc -l cero-out.txt | awk -F " " '{print "Cero Results: " $1}'
+wc -l toolOutput/ReverseIP.txt | awk -F " " '{print "ReverseIP Search Results: " $1}'
+wc -l toolOutput/amass.txt | awk -F " " '{print "Amass Results: " $1}'
+wc -l toolOutput/crtsh.txt | awk -F " " '{print "Crt.sh Results: " $1}'
+wc -l toolOutput/assetfinder.txt | awk -F " " '{print "AssetFinder Results: " $1}'
+wc -l toolOutput/gau.txt | awk -F " " '{print "Gau Results: " $1}'
+wc -l toolOutput/waybackurls.txt | awk -F " " '{print "Waybackurls Results: " $1}'
+wc -l toolOutput/theHarvester/theHarvester.txt | awk -F " " '{print "theHarvester Results: " $1}'
+wc -l toolOutput/subfinder.txt | awk -F " " '{print "subfinder Results: " $1}'
+wc -l toolOutput/gobusterresults.txt | awk -F " " '{print "GoBuster Results: " $1}'
+wc -l toolOutput/cero-out.txt | awk -F " " '{print "Cero Results: " $1}'
 
 
 echo " "

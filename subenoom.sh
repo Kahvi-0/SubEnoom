@@ -330,7 +330,7 @@ filename=$(cat hostsockets.txt)
 for i in $filename; do
 	echo "Gobusting vhost for $i"
 	gobuster vhost -u $i -w subdomains.txt -o gobustvhost.txt --exclude-status "500,502,503,504" --ne --np -q -k
-	cat gobustvhost.txt | currentip=$i awk -F "Status" '{print $1, ":", ENVIRON["currentip"]}' >> vhosts-subdomains.txt
+	cat gobustvhost.txt | currentip=$i awk -F "Status" '{print $1, ":", ENVIRON["currentip"]}' >> 
 done
 
 cat inscopeDomains1.txt | awk -F ' ' '{print$1}' | sort -u > cero.txt
@@ -409,7 +409,8 @@ END {
 }
 ' inscopeDomains.txt > CleanedDomains1.txt
 
-cat CleanedDomains1.txt vhosts-subdomains.txt | sort -u > CleanedDomains.txt
+cat CleanedDomains1.txt > CleanedDomains.txt
+cat toolOutput/vhosts-subdomains.txt >> CleanedDomains.txt
 
 #Final CLI output file
 echo "#=============================================" > Finalout.txt

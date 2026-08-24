@@ -231,7 +231,7 @@ fi
 echo -e "\ncrt.sh"
 file=$(cat InputHosts.txt)
 for i in $file; do
-	curl https://crt.sh/?q=$i 2>/dev/null | grep "<TD>" | grep -v -e "style=" | sed 's/<TD>//g; s/<\/TD>//g; s/<BR>/\n/g' | tr -d ' ' | sort -u >> crtsh.txt
+	curl "https://crt.sh/?q=%25.$i" 2>/dev/null | grep "<TD>" | grep -v -e "style=" | sed 's/<TD>//g; s/<\/TD>//g; s/<BR>/\n/g' | tr -d ' ' | sort -u >> crtsh.txt
         cat crtsh.txt >> scan-subdomains.txt
 done
 
@@ -267,9 +267,9 @@ cat waybackurls.txt | grep -oP '(?<=^http:\/\/).*?(?=\/|\?|$)' | sort -u >> scan
 # theHarvester
 echo -e "\ntheHarvester"
 filename=$(cat InputHosts.txt)
-git clone https://github.com/laramies/theHarvester
+git clone --quiet https://github.com/laramies/theHarvester
 cd theHarvester
-uv sync
+uv -q sync
 for i in $filename; do 
 	uv run theHarvester -d $i -b all > theHarvester.txt
 	cat theHarvester.txt >> theHarvester.log
@@ -279,6 +279,23 @@ for i in $filename; do
 	cat theHarvester.txt | sed -n '/\[\*\] Interesting Urls found/,/\[\*\]/p' | tail -n +3 | head -n -2 | sort -u >> ../scan-urls.txt
 done
 cd ..
+
+#crt name
+echo -e "\ncrt.name"
+filename=$(cat InputHosts.txt)
+for i in $filename; do 
+	curl -s "https://crt.name/v1/search?apex=$i" >> crt.name.txt
+done
+cat crt.name.txt | sort -u >> scan-subdomains.txt
+
+#urlscan
+echo -e "\nurlscan"
+filename=$(cat InputHosts.txt)
+for i in $filename; do 
+	curl -s "https://urlscan.io/api/v1/search/?q=domain:$i&size=10000" | grep  'url":' | sed -n 's/.*"url": *"\(https:\/\/\|http:\/\/\)\?\([^/" ]*\).*/\2/p' | sort -u >> urlscan.txt
+done
+cat urlscan.txt | sort -u >> scan-subdomains.txt
+
 
 #Subfinder
 echo -e "\nSubfinder"
@@ -307,33 +324,26 @@ cat scan-emails.txt | sort -u >> emails.txt
 
 #========= RESOLVING IPs AND IF IN SCOPE =========
 echo -e "\nChecking which subdomains are alive"
-cat subdomains.txt inscopeips.txt | sort | uniq > alivesubdomains1.txt
+#cat subdomains.txt | sort | uniq > alivesubdomains1.txt
 
-filename=$(cat alivesubdomains1.txt)
+filename=$(cat subdomains.txt)
 #update ########
-cat alivesubdomains1.txt InputHosts.txt | dnsx -r resolvers.txt -all -resp -silent  2>/dev/null >> resolve.txt
-while read i; do
-	echo "dnsx checkin $i"
-	if echo $i | grep -F -f inscopeips.txt; then
-	    echo $i >> inscopeDomains1.txt ;
-	else
- 	    if echo $i | grep -F -f InputHosts.txt; then
- 	    	echo $i | grep -oP '\[[^\]]+\]\s+\[\K[^\]]+(?=\])' | grep -F -f InputHosts.txt 
- 	    	echo $i | grep -oP '\[[^\]]+\]\s+\[\K[^\]]+(?=\])' | grep -F -f InputHosts.txt  >> inscopeDomains1.txt subdomains.txt
- 	    else
- 	    	:
- 	    fi
-	fi
-done <resolve.txt
+
+
+cat subdomains.txt | grep -F -f InputHosts.txt | NO_COLOR=1 dnsx -r resolvers.txt -all -resp -silent  2>/dev/null >> resolve.txt
+sed 's/\x1b\[[0-9;]*m//g' resolve.txt | awk '{val=$3; for(i=4;i<=NF;i++) val=val" "$i; print val}' | tr -d '[]' | sort -u |  grep -F -f InputHosts.txt | NO_COLOR=1 dnsx -r resolvers.txt -all -resp -silent  2>/dev/null >> resolve.txt
+
+cat resolve.txt | grep -F -f inscopeips.txt | grep -F -f InputHosts.txt > Resolved-Inscope-IPs.txt
+#cat resolve.txt | grep -F -f InputHosts.txt > Resolved-Inscope-domains.txt
+sed 's/\x1b\[[0-9;]*m//g' resolve.txt | grep -oP '\b([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b' |  grep -F -f InputHosts.txt |  sort -u >> subdomains.txt
 
 filename=$(cat hostsockets.txt)
 for i in $filename; do
 	echo "Gobusting vhost for $i"
 	gobuster vhost -u $i -w subdomains.txt -o gobustvhost.txt --exclude-status "500,502,503,504" --ne --np -q -k
-	cat gobustvhost.txt | currentip=$i awk -F "Status" '{print $1, ":", ENVIRON["currentip"]}' >> 
+	cat gobustvhost.txt | currentip=$i awk -F "Status" '{print $1, ":", ENVIRON["currentip"]}' >> vhosts-subdomains.txt
 done
-
-cat inscopeDomains1.txt | awk -F ' ' '{print$1}' | sort -u > cero.txt
+cat subdomains.txt | grep -F -f InputHosts.txt | sort -u > cero.txt
 
 #cero here so it can use a list of domains found to be inscope based on provided IP
 ceroports="-p $ports"
@@ -380,9 +390,9 @@ cat inscopeDomains1.txt | grep "has address"| sed 's/has address/:/g' | sort -u 
 #========= FILE CLEANUP ===================
 
 #Comment line below for troubleshoooting
-rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt resolve3.txt scan-urls.txt scan-emails.txt sublist.txt inscopeDomains1.txt scan-subdomains.txt inscopeDomains1.txt
+#rm alivesubdomains1.txt InputHosts.txt resolve.txt resolve1.txt resolve2.txt resolve3.txt scan-urls.txt scan-emails.txt sublist.txt inscopeDomains1.txt scan-subdomains.txt inscopeDomains1.txt
 mkdir toolOutput
-mv amass.txt assetfinder.txt cero* crtsh.txt gau.txt gobusterresults.txt hostinfo.txt ReverseIP.txt waybackurls.txt subfinder.txt theHarvester gobustvhost.txt urls.txt toolOutput
+mv vhosts-subdomains.txt urlscan.txt crt.name.txt amass.txt assetfinder.txt cero* crtsh.txt gau.txt gobusterresults.txt hostinfo.txt ReverseIP.txt waybackurls.txt subfinder.txt theHarvester gobustvhost.txt urls.txt toolOutput
 
 awk -F':' '
 {
@@ -410,22 +420,25 @@ END {
 ' inscopeDomains.txt > CleanedDomains1.txt
 
 cat CleanedDomains1.txt > CleanedDomains.txt
-cat toolOutput/vhosts-subdomains.txt >> CleanedDomains.txt
+#cat toolOutput/vhosts-subdomains.txt >> CleanedDomains.txt
 
 #Final CLI output file
 echo "#=============================================" > Finalout.txt
-echo "#================ Domains ====================" >> Finalout.txt
-echo "#=========== Alive and inscope ===============" >> Finalout.txt
+echo "#=========== Alive Domains and inscope ===============" >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
 cat CleanedDomains.txt >> Finalout.txt
+cat Resolved-Inscope-IPs.txt >> Finalout.txt
+#cat Resolved-Inscope-domains.txt >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
-echo "#================ Domains ====================" >> Finalout.txt
-echo "#======= Alive regardless of inscope =========" >> Finalout.txt
+echo "#=========== vHost bruteforce with inscope IPs ===============" >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+cat toolOutput/vhosts-subdomains.txt >> Finalout.txt
+echo "#=============================================" >> Finalout.txt
+echo "#======= Alive Domains Regardless if inscope =========" >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
 cat ResolveFinal.txt >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
-echo "#================ Domains ====================" >> Finalout.txt
-echo "#============ All not resolved ===============" >> Finalout.txt
+echo "#============ All Domains not resolved ===============" >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
 cat subdomains.txt >> Finalout.txt
 echo "#=============================================" >> Finalout.txt
@@ -445,6 +458,8 @@ echo ""
 wc -l toolOutput/ReverseIP.txt | awk -F " " '{print "ReverseIP Search Results: " $1}'
 wc -l toolOutput/amass.txt | awk -F " " '{print "Amass Results: " $1}'
 wc -l toolOutput/crtsh.txt | awk -F " " '{print "Crt.sh Results: " $1}'
+wc -l toolOutput/crt.name.txt | awk -F " " '{print "Crt.name Results: " $1}'
+wc -l toolOutput/urlscan.txt | awk -F " " '{print "urlscan Results: " $1}'
 wc -l toolOutput/assetfinder.txt | awk -F " " '{print "AssetFinder Results: " $1}'
 wc -l toolOutput/gau.txt | awk -F " " '{print "Gau Results: " $1}'
 wc -l toolOutput/waybackurls.txt | awk -F " " '{print "Waybackurls Results: " $1}'

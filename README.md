@@ -1,3 +1,7 @@
+> [!WARNING]
+> **This repository has moved!**
+> Development has shifted and function has merged into https://github.com/Kahvi-0/ReconBubble/blob/main/README.md
+
 # SubEnoom
 ![image](https://github.com/Kahvi-0/SubEnoom/assets/46513413/5aa80594-aade-4ff9-a603-adda3dc6df2a)
 
